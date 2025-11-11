@@ -4,6 +4,8 @@ import SwiftUI
 struct HomeView: View {
     @State private var promptText: String = ""
     @State private var selectedTab: BottomTab = .home
+    @State private var navigationPath: [HomeRoute] = []
+    @State private var showPaywall: Bool = false
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -12,41 +14,40 @@ struct HomeView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                
-                // CONTENT
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        HeaderView()
-                        
-                        InputBoxView(text: $promptText)
-                        
-                        GenerateButtonView(title: "Generate")
-                            .padding(.top, 2)
-                        
-                        // Last Generated
-                        Text("Last Generated")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.black)
-                            .padding(.top, 6)
-                        
-                        LastGeneratedCardView(
-                            imageName: "sample_thumb_1",
-                            title: "Tur Tur Tur Sahur",
-                            subtitle: "Neo-pop vigilante"
+                if selectedTab == .home {
+                    NavigationStack(path: $navigationPath) {
+                        HomeContentView(
+                            promptText: $promptText,
+                            onGenerate: { navigationPath.append(.generateDetails) },
+                            onTapPro: { showPaywall = true }
                         )
-                        .padding(.bottom, 4)
-                        
-                        // Favorites
-                        Text("Favorites")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.black)
-                            .padding(.top, 4)
-                        
-                        FavoritesGridView()
-                            .padding(.bottom, 72)
+                        .navigationDestination(for: HomeRoute.self) { route in
+                            switch route {
+                            case .generateDetails:
+                                GenerateDetailsView(onGenerate: {
+                                    navigationPath.append(.generateProgress)
+                                })
+                            case .generateProgress:
+                                GeneratingView(onFinished: {
+                                    navigationPath.append(.generatedResult)
+                                })
+                            case .generatedResult:
+                                GeneratedResultView(
+                                    onGenerateAgain: {
+                                        navigationPath.removeAll()
+                                        navigationPath.append(.generateDetails)
+                                    }
+                                )
+                            }
+                        }
+                        .sheet(isPresented: $showPaywall) {
+                            PaywallView()
+                        }
+                        .toolbar(.hidden, for: .navigationBar)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 10)
+                } else {
+                    SettingsView()
+                        .padding(.top, 10)
                 }
                 
                 // CUSTOM TAB BAR
@@ -54,11 +55,61 @@ struct HomeView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .onChange(of: selectedTab) { newValue in
+            if newValue != .home {
+                navigationPath.removeAll()
+            }
+        }
+    }
+}
+
+// MARK: - Home Content Wrapper
+private struct HomeContentView: View {
+    @Binding var promptText: String
+    let onGenerate: () -> Void
+    let onTapPro: () -> Void
+    
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 16) {
+                HeaderView(onTapPro: onTapPro)
+                
+                InputBoxView(text: $promptText)
+                
+                GenerateButtonView(title: "Generate", action: onGenerate)
+                    .padding(.top, 2)
+                
+                // Last Generated
+                Text("Last Generated")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.black)
+                    .padding(.top, 6)
+                
+                LastGeneratedCardView(
+                    imageName: "sample_thumb_1",
+                    title: "Tur Tur Tur Sahur",
+                    subtitle: "Neo-pop vigilante"
+                )
+                .padding(.bottom, 4)
+                
+                // Favorites
+                Text("Favorites")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.black)
+                    .padding(.top, 4)
+                
+                FavoritesGridView()
+                    .padding(.bottom, 72)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 10)
+        }
     }
 }
 
 // MARK: - Header
 private struct HeaderView: View {
+    let onTapPro: () -> Void
     var body: some View {
         HStack(alignment: .top) {
             Text("Who will you\nbe today?")
@@ -68,7 +119,7 @@ private struct HeaderView: View {
                 .lineSpacing(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
-            Button(action: {}) {
+            Button(action: onTapPro) {
                 Image("pro_badge")
                     .resizable()
                     .scaledToFit()
@@ -126,33 +177,36 @@ private struct InputBoxView: View {
 // MARK: - Generate Button ✅ FINAL SHADOW FIX
 private struct GenerateButtonView: View {
     let title: String
+    let action: () -> Void
     
     var body: some View {
-        ZStack {
-            // Shadow layer behind
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color.black.opacity(0.40))
-                .frame(height: 56)
-                .offset(y: 7)
-            
-            // Main button
-            Image("btn_bg")
-                .resizable()
-                .scaledToFill()
-                .frame(height: 56)
-                .clipShape(RoundedRectangle(cornerRadius: 24))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(Color.black, lineWidth: 4)
-                )
-            
-            // Button text
-            Text(title)
-                .font(.system(size: 20, weight: .black, design: .rounded))
-                .foregroundColor(.white)
-                .shadow(color: .black.opacity(0.65), radius: 0, x: 0, y: 3)
+        Button(action: action) {
+            ZStack {
+                // Shadow layer behind
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(Color.black.opacity(0.40))
+                    .frame(height: 56)
+                    .offset(y: 7)
+                
+                // Main button
+                Image("btn_bg")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: 56)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(Color.black, lineWidth: 4)
+                    )
+                
+                // Button text
+                Text(title)
+                    .font(.system(size: 20, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.65), radius: 0, x: 0, y: 3)
+            }
+            .frame(height: 56)
         }
-        .frame(height: 56)
         .buttonStyle(.plain)
     }
 }
@@ -290,6 +344,12 @@ private struct FavoriteItemView: View {
 // MARK: - Custom Tab Bar
 private enum BottomTab { case home, settings }
 
+private enum HomeRoute: Hashable {
+    case generateDetails
+    case generateProgress
+    case generatedResult
+}
+
 private struct CustomTabBarView: View {
     @Binding var selected: BottomTab
     
@@ -349,7 +409,7 @@ private struct TabButton: View {
 }
 
 // MARK: - Color Utility
-private extension Color {
+extension Color {
     init(hex: String) {
         let hex = hex.replacingOccurrences(of: "#", with: "")
         var int: UInt64 = 0

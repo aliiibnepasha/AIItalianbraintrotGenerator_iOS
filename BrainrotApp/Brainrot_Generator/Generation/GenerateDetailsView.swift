@@ -2,6 +2,7 @@ import SwiftUI
 
 // MARK: - Screen
 struct GenerateDetailsView: View {
+    var onGenerate: () -> Void = {}
     // Selections (all single-select, independent)
     @State private var selectedGenderIndex: Int = 0
     @State private var selectedMoodIndex: Int = 0
@@ -22,7 +23,7 @@ struct GenerateDetailsView: View {
 
     // Colors (no custom hex helpers to avoid ambiguity)
     private let bgColor   = SwiftUI.Color(red: 251/255, green: 238/255, blue: 227/255) // #FBEEE3
-    private let pinkColor = SwiftUI.Color(red: 1.0,     green: 111/255,  blue: 175/255) // #FF6FAF
+    private let pinkColor = SwiftUI.Color(red: 215/255, green: 38/255,  blue: 61/255) // #D7263D
     private let yellow    = SwiftUI.Color(red: 242/255, green: 201/255,  blue:  76/255) // #F2C94C
 
     var body: some View {
@@ -57,7 +58,7 @@ struct GenerateDetailsView: View {
                     Pill2x2Section(
                         titles: genderItems,
                         selectedIndex: $selectedGenderIndex,
-                        pinkColor: pinkColor
+                        selectionColor: pinkColor
                     )
 
                     // Mood Selector (single select)
@@ -65,7 +66,7 @@ struct GenerateDetailsView: View {
                     Pill2x2Section(
                         titles: moodItems,
                         selectedIndex: $selectedMoodIndex,
-                        pinkColor: pinkColor
+                        selectionColor: pinkColor
                     )
 
                     // Accent Strength
@@ -78,17 +79,15 @@ struct GenerateDetailsView: View {
                         items: outfitItems,
                         selectedIndex: $selectedOutfit,
                         yellow: yellow,
-                        pinkColor: pinkColor
+                        selectionColor: pinkColor
                     )
 
                     // Aspect Ratio (up to 16:9)
                     SectionLabel("Aspect Ratio")
-                    AspectRow(selected: $selectedAspect, pinkColor: pinkColor)
+                    AspectRow(selected: $selectedAspect, selectionColor: pinkColor)
 
                     // Generate Button
-                    GenerateButton(title: "Generate") {
-                        // TODO: Hook your generate action here
-                    }
+                    GenerateButton(title: "Generate", action: onGenerate)
                     .padding(.vertical, 10)
                 }
                 .padding(.horizontal, 16)
@@ -96,6 +95,8 @@ struct GenerateDetailsView: View {
                 .padding(.top, 8)
             }
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
@@ -162,7 +163,7 @@ private struct BackButton: View {
 private struct SelectPill: View {
     let title: String
     let isSelected: Bool
-    let pinkColor: SwiftUI.Color
+    let selectionColor: SwiftUI.Color
 
     var body: some View {
         SwiftUI.ZStack {
@@ -172,7 +173,7 @@ private struct SelectPill: View {
                 .offset(y: 5)
 
             SwiftUI.RoundedRectangle(cornerRadius: 18)
-                .fill(isSelected ? pinkColor : SwiftUI.Color.white)
+                .fill(isSelected ? selectionColor : SwiftUI.Color.white)
                 .overlay(
                     SwiftUI.RoundedRectangle(cornerRadius: 18)
                         .stroke(SwiftUI.Color.black, lineWidth: 4)
@@ -181,7 +182,7 @@ private struct SelectPill: View {
                 .overlay(
                     SwiftUI.Text(title)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.black)
+                        .foregroundColor(isSelected ? .white : .black)
                 )
         }
     }
@@ -191,7 +192,7 @@ private struct SelectPill: View {
 private struct Pill2x2Section: View {
     let titles: [String]
     @Binding var selectedIndex: Int
-    let pinkColor: SwiftUI.Color
+    let selectionColor: SwiftUI.Color
 
     var body: some View {
         SwiftUI.VStack(spacing: 12) {
@@ -200,7 +201,7 @@ private struct Pill2x2Section: View {
                     SwiftUI.Button {
                         selectedIndex = i
                     } label: {
-                        SelectPill(title: titles[i], isSelected: selectedIndex == i, pinkColor: pinkColor)
+                        SelectPill(title: titles[i], isSelected: selectedIndex == i, selectionColor: selectionColor)
                     }
                     .buttonStyle(.plain)
                 }
@@ -210,7 +211,7 @@ private struct Pill2x2Section: View {
                     SwiftUI.Button {
                         selectedIndex = i
                     } label: {
-                        SelectPill(title: titles[i], isSelected: selectedIndex == i, pinkColor: pinkColor)
+                        SelectPill(title: titles[i], isSelected: selectedIndex == i, selectionColor: selectionColor)
                     }
                     .buttonStyle(.plain)
                 }
@@ -263,7 +264,7 @@ private struct OutfitRow: View {
     let items: [OutfitItem]
     @Binding var selectedIndex: Int
     let yellow: SwiftUI.Color
-    let pinkColor: SwiftUI.Color
+    let selectionColor: SwiftUI.Color
 
     var body: some View {
         SwiftUI.ScrollView(.horizontal, showsIndicators: false) {
@@ -289,7 +290,7 @@ private struct OutfitRow: View {
 
                             SwiftUI.Text(items[i].title)
                                 .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.black)
+                                .foregroundColor(selected ? .white : .black)
                                 .frame(maxWidth: .infinity)
                         }
                         .padding(6)
@@ -298,7 +299,7 @@ private struct OutfitRow: View {
                                 .fill(yellow)
                                 .overlay(
                                     SwiftUI.RoundedRectangle(cornerRadius: 16)
-                                        .stroke(selected ? pinkColor : SwiftUI.Color.black, lineWidth: 4)
+                                        .stroke(selected ? selectionColor : SwiftUI.Color.black, lineWidth: 4)
                                 )
                         )
                         .frame(width: 100, height: 136)
@@ -315,12 +316,12 @@ private struct OutfitRow: View {
 // Aspect Ratio chips
 private struct AspectRow: View {
     @Binding var selected: Aspect
-    let pinkColor: SwiftUI.Color
+    let selectionColor: SwiftUI.Color
 
     var body: some View {
         SwiftUI.HStack(spacing: 10) {
             ForEach([Aspect.oneOne, .fourThree, .twoThree, .threeTwo, .sixteenNine]) { a in
-                AspectChip(title: a.rawValue, isSelected: a == selected, pinkColor: pinkColor)
+                AspectChip(title: a.rawValue, isSelected: a == selected, selectionColor: selectionColor)
                     .onTapGesture { selected = a }
             }
             SwiftUI.Spacer(minLength: 0)
@@ -331,7 +332,7 @@ private struct AspectRow: View {
 private struct AspectChip: View {
     let title: String
     let isSelected: Bool
-    let pinkColor: SwiftUI.Color
+    let selectionColor: SwiftUI.Color
 
     var body: some View {
         SwiftUI.ZStack {
@@ -341,7 +342,7 @@ private struct AspectChip: View {
                 .offset(y: 5)
 
             SwiftUI.RoundedRectangle(cornerRadius: 16)
-                .fill(isSelected ? pinkColor : SwiftUI.Color.white)
+                .fill(isSelected ? selectionColor : SwiftUI.Color.white)
                 .overlay(
                     SwiftUI.RoundedRectangle(cornerRadius: 16)
                         .stroke(SwiftUI.Color.black, lineWidth: 4)
@@ -350,7 +351,7 @@ private struct AspectChip: View {
                 .overlay(
                     SwiftUI.Text(title)
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.black)
+                        .foregroundColor(isSelected ? .white : .black)
                 )
         }
     }

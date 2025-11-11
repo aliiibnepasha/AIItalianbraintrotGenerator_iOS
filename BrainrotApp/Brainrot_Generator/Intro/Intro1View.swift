@@ -1,9 +1,9 @@
 import SwiftUI
 
 struct Intro1View: View {
+    var onNext: () -> Void = {}
     
     @State private var animateSticker = false
-    @State private var goNext = false   // Navigation trigger
     
     var body: some View {
         ZStack {
@@ -65,7 +65,7 @@ struct Intro1View: View {
 
                 // ✅ Next Button
                 Button {
-                    goNext = true
+                    onNext()
                 } label: {
                     ZStack {
                         Image("btn_bg")
@@ -81,12 +81,7 @@ struct Intro1View: View {
                 .padding(.horizontal, 40)
                 .padding(.bottom, 85)
             }
-            // ✅ Navigation Trigger (hidden)
-            .navigationDestination(isPresented: $goNext) {
-                Intro2View()
-            }
         }
-        .navigationBarBackButtonHidden(true)
         .onAppear {
             animateSticker = true   // ✅ run animation
         }

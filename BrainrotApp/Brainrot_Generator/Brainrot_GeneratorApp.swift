@@ -7,11 +7,34 @@
 
 import SwiftUI
 
+private enum AppFlowStep {
+    case splash
+    case intro1
+    case intro2
+    case intro3
+    case main
+}
+
 @main
 struct Brainrot_GeneratorApp: App {
+    @State private var step: AppFlowStep = .splash
+    
     var body: some Scene {
         WindowGroup {
-            SplashView()
+            Group {
+                switch step {
+                case .splash:
+                    SplashView(onFinished: { step = .intro1 })
+                case .intro1:
+                    Intro1View(onNext: { step = .intro2 })
+                case .intro2:
+                    Intro2View(onNext: { step = .intro3 })
+                case .intro3:
+                    Intro3View(onGetStarted: { step = .main })
+                case .main:
+                    HomeView()
+                }
+            }
         }
     }
 }
