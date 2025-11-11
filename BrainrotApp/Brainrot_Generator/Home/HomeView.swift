@@ -3,6 +3,7 @@ import SwiftUI
 // MARK: - Home Screen (Root)
 struct HomeView: View {
     @State private var promptText: String = ""
+    @State private var selectedKeywords: [String] = []
     @State private var selectedTab: BottomTab = .home
     @State private var navigationPath: [HomeRoute] = []
     @State private var showPaywall: Bool = false
@@ -18,6 +19,7 @@ struct HomeView: View {
                     NavigationStack(path: $navigationPath) {
                         HomeContentView(
                             promptText: $promptText,
+                            selectedKeywords: $selectedKeywords,
                             onGenerate: { navigationPath.append(.generateDetails) },
                             onTapPro: { showPaywall = true }
                         )
@@ -66,6 +68,7 @@ struct HomeView: View {
 // MARK: - Home Content Wrapper
 private struct HomeContentView: View {
     @Binding var promptText: String
+    @Binding var selectedKeywords: [String]
     let onGenerate: () -> Void
     let onTapPro: () -> Void
     
@@ -74,7 +77,7 @@ private struct HomeContentView: View {
             VStack(alignment: .leading, spacing: 16) {
                 HeaderView(onTapPro: onTapPro)
                 
-                InputBoxView(text: $promptText)
+                InputBoxView(text: $promptText, keywords: $selectedKeywords)
                 
                 GenerateButtonView(title: "Generate", action: onGenerate)
                     .padding(.top, 2)
@@ -132,15 +135,25 @@ private struct HeaderView: View {
 // MARK: - Input Box ✅ FINAL SHADOW FIX
 private struct InputBoxView: View {
     @Binding var text: String
+    @Binding var keywords: [String]
+    
+    @State private var currentInput: String = ""
+    @FocusState private var isFocused: Bool
+    
+    private let gradient = LinearGradient(
+        colors: [Color(hex: "#D7263D"), Color(hex: "#F2C94C")],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             
             // Shadow Layer (behind and offset)
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.black.opacity(0.40))
                 .frame(height: 160)
-                .offset(y: 7) // ✅ perfect cartoon shadow
+                .offset(y: 7)
             
             // Main Frame
             RoundedRectangle(cornerRadius: 20)
@@ -151,26 +164,118 @@ private struct InputBoxView: View {
                 )
                 .frame(height: 160)
             
-            // TextEditor inside
-            TextEditor(text: $text)
+            VStack(alignment: .leading, spacing: 10) {
+                
+                if !keywords.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(keywords, id: \.self) { keyword in
+                                HStack(spacing: 6) {
+                                    Text(keyword.capitalized)
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(.white)
+                                    
+                                    Button {
+                                        removeKeyword(keyword)
+                                    } label: {
+                                        Image(systemName: "xmark")
+                                            .font(.system(size: 11, weight: .bold))
+                                            .foregroundColor(.white.opacity(0.9))
+                                            .padding(.leading, 2)
+                                    }
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(gradient)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color.black.opacity(0.35), lineWidth: 1)
+                                        )
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 2)
+                    }
+                }
+                
+                TextField(
+                    keywords.isEmpty && currentInput.isEmpty ? "Enter your character name here" : "",
+                    text: $currentInput,
+                    onCommit: commitCurrentInput
+                )
                 .font(.system(size: 15))
                 .foregroundColor(.black)
-                .padding(.top, 14)
-                .padding(.horizontal, 14)
-                .frame(height: 160)
-                .scrollContentBackground(.hidden)
-                .background(Color.clear)
-            
-            // Placeholder
-            if text.isEmpty {
-                Text("Enter your prompt details here.....")
-                    .font(.system(size: 15))
-                    .foregroundColor(.gray.opacity(0.55))
-                    .padding(.top, 18)
-                    .padding(.leading, 19)
+                .focused($isFocused)
+                .submitLabel(.done)
+                .onChange(of: isFocused) { newValue in
+                    if newValue == false {
+                        commitCurrentInput()
+                    }
+                }
+                .onChange(of: currentInput) { newValue in
+                    handleInputChange(newValue)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+        }
+        .frame(height: 160)
+        .accessibilityIdentifier("promptInputBox")
+        .onAppear {
+            seedFromPrompt()
+        }
+    }
+    
+    private func handleInputChange(_ value: String) {
+        if value.contains(",") || value.hasSuffix(" ") {
+            commitCurrentInput()
+        }
+    }
+    
+    private func commitCurrentInput() {
+        let cleaned = currentInput
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: ",", with: " ")
+        
+        let parts = cleaned
+            .split(whereSeparator: { $0.isWhitespace })
+            .map { String($0) }
+            .filter { !$0.isEmpty }
+        
+        guard !parts.isEmpty else {
+            currentInput = ""
+            return
+        }
+        
+        parts.forEach { part in
+            if !keywords.contains(part) {
+                keywords.append(part)
             }
         }
-        .accessibilityIdentifier("promptInputBox")
+        
+        currentInput = ""
+        updatePromptText()
+    }
+    
+    private func removeKeyword(_ keyword: String) {
+        keywords.removeAll { $0 == keyword }
+        updatePromptText()
+    }
+    
+    private func updatePromptText() {
+        text = keywords.joined(separator: ", ")
+    }
+    
+    private func seedFromPrompt() {
+        guard !text.isEmpty, keywords.isEmpty else { return }
+        let initial = text
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        keywords.append(contentsOf: initial)
+        updatePromptText()
     }
 }
 
