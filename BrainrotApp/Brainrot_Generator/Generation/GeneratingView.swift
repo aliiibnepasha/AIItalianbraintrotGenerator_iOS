@@ -1,9 +1,6 @@
 import SwiftUI
 
 struct GeneratingView: View {
-    
-    var onFinished: () -> Void = {}
-    
     // MARK: - Animation State
     @State private var backRotation: Double = 0
     @State private var middleRotation: Double = 0
@@ -31,6 +28,8 @@ struct GeneratingView: View {
             }
             .padding(.horizontal, 32)
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear(perform: startAnimations)
     }
     
@@ -77,7 +76,8 @@ struct GeneratingView: View {
                 )
                 .overlay(
                     Text("Generating.....")
-                        .font(.system(size: 20, weight: .black, design: .rounded))
+                        .font(AppFont.nippoMedium(20))
+                        .fontWeight(.black)
                         .foregroundColor(.white)
                         .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 3)
                 )
@@ -98,10 +98,6 @@ struct GeneratingView: View {
             topRotation = -360
         }
         
-        // Simulated completion callback (replace with real generation completion)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
-            onFinished()
-        }
     }
 }
 

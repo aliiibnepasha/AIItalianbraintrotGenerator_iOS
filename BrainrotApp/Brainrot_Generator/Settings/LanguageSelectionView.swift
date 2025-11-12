@@ -26,7 +26,7 @@ struct LanguageSelectionView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "#FBEEE3")
+            Theme.background
                 .ignoresSafeArea()
             
             VStack(alignment: .leading, spacing: 20) {
@@ -65,12 +65,14 @@ struct LanguageSelectionView: View {
                 selectedLanguage = pendingSelection
                 dismiss()
             }
-            .font(.system(size: 16, weight: .bold))
+            .font(AppFont.nippoMedium(16))
+            .fontWeight(.bold)
             .foregroundColor(.black)
         }
         .overlay(
             Text("Language")
-                .font(.system(size: 32, weight: .black, design: .rounded))
+                .font(AppFont.nippoMedium(32))
+                .fontWeight(.black)
                 .foregroundColor(.black)
         )
     }
@@ -105,14 +107,16 @@ private struct LanguageRow: View {
     private var rowContent: some View {
         HStack {
             Text(title)
-                .font(.system(size: 17, weight: .semibold))
+                .font(AppFont.nippoMedium(17))
+                .fontWeight(.semibold)
                 .foregroundColor(isSelected ? .white : .black)
             
             Spacer()
             
             if isSelected {
                 Image(systemName: "checkmark")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(AppFont.nippoMedium(18))
+                    .fontWeight(.bold)
                     .foregroundColor(.white)
             }
         }
@@ -140,7 +144,8 @@ private struct BackButton: View {
                     .frame(width: 40, height: 40)
                     .overlay(
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .bold))
+                    .font(AppFont.nippoMedium(16))
+                    .fontWeight(.bold)
                             .foregroundColor(.black)
                     )
             }

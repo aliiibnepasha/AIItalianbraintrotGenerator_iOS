@@ -51,13 +51,15 @@ struct Intro3View: View {
                 // ✅ Title with thick cartoon shadow
                 ZStack {
                     Text("Share,Break, Go Viral!")
-                        .font(.system(size: 28, weight: .black))
+                            .font(AppFont.nippoMedium(28))
+                            .fontWeight(.black)
                         .foregroundColor(.black)
                         .multilineTextAlignment(.center)
                         .offset(x: 3, y: 4)
                     
                     Text("Share,Break, Go Viral!")
-                        .font(.system(size: 28, weight: .black))
+                            .font(AppFont.nippoMedium(28))
+                            .fontWeight(.black)
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                 }
@@ -76,7 +78,8 @@ struct Intro3View: View {
                             .frame(height: 60)
                         
                         Text("Get Started")
-                            .font(.system(size: 20, weight: .bold))
+                                .font(AppFont.nippoMedium(20))
+                                .fontWeight(.bold)
                             .foregroundColor(.white)
                     }
                 }

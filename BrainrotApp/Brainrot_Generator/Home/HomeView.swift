@@ -3,46 +3,72 @@ import FirebaseAuth
 
 // MARK: - Home Screen (Root)
 struct HomeView: View {
+    @StateObject private var contentStore = GeneratedContentStore()
     @State private var promptText: String = ""
     @State private var selectedKeywords: [String] = []
     @State private var selectedTab: BottomTab = .home
     @State private var navigationPath: [HomeRoute] = []
     @State private var showPaywall: Bool = false
     @State private var hasAuthenticated: Bool = false
+    @State private var detailImage: GeneratedImage?
+    @State private var showKeywordAlert = false
+    @State private var generationErrorMessage: String?
+    @State private var showGenerationError = false
+    
+    private let generationService = ImageGenerationService()
     
     var body: some View {
         ZStack(alignment: .bottom) {
             // Background
-            Color(hex: "#FBEEE3")
+            Theme.background
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 if selectedTab == .home {
                     NavigationStack(path: $navigationPath) {
                         HomeContentView(
+                            contentStore: contentStore,
                             promptText: $promptText,
                             selectedKeywords: $selectedKeywords,
+                            detailImage: $detailImage,
                             onGenerate: { navigationPath.append(.generateDetails) },
+                            onRequireKeywords: { showKeywordAlert = true },
                             onTapPro: { showPaywall = true }
                         )
                         .navigationDestination(for: HomeRoute.self) { route in
                             switch route {
                             case .generateDetails:
-                                GenerateDetailsView(onGenerate: {
-                                    navigationPath.append(.generateProgress)
-                                })
+                                GenerateDetailsView(
+                                    keywords: selectedKeywords,
+                                    onGenerate: startGeneration
+                                )
+                                .environmentObject(contentStore)
                             case .generateProgress:
-                                GeneratingView(onFinished: {
-                                    navigationPath.append(.generatedResult)
-                                })
-                            case .generatedResult:
+                                GeneratingView()
+                            case .generatedResult(let image):
                                 GeneratedResultView(
+                                    image: image,
+                                    onClose: {
+                                        navigationPath.removeAll()
+                                    },
                                     onGenerateAgain: {
                                         navigationPath.removeAll()
                                         navigationPath.append(.generateDetails)
                                     }
                                 )
+                                .environmentObject(contentStore)
                             }
+                        }
+                        .sheet(item: $detailImage) { image in
+                            ImageDetailView(
+                                image: image,
+                                onClose: { detailImage = nil },
+                                onDelete: {
+                                    contentStore.delete(image)
+                                    detailImage = nil
+                                }
+                            )
+                            .environmentObject(contentStore)
                         }
                         .sheet(isPresented: $showPaywall) {
                             PaywallView()
@@ -52,6 +78,7 @@ struct HomeView: View {
                 } else {
                     SettingsView()
                         .padding(.top, 10)
+                        .environmentObject(contentStore)
                 }
                 
                 // CUSTOM TAB BAR
@@ -67,14 +94,71 @@ struct HomeView: View {
         .task {
             await ensureAnonymousSignIn()
         }
+        .alert("Please enter a character name", isPresented: $showKeywordAlert) {
+            Button("OK", role: .cancel) {}
+        }
+        .alert("Generation failed", isPresented: $showGenerationError, presenting: generationErrorMessage) { _ in
+            Button("OK", role: .cancel) {}
+        } message: { message in
+            Text(message)
+        }
+    }
+}
+
+private extension HomeView {
+    func startGeneration(with request: GenerationRequest) {
+        navigationPath.append(.generateProgress)
+        
+        Task {
+            do {
+                let uiImage = try await generationService.generateImage(
+                    prompt: request.composedPrompt(),
+                    negativePrompt: request.negativePrompt
+                )
+                
+                await MainActor.run {
+                    do {
+                        let generated = try contentStore.saveGeneration(
+                            image: uiImage,
+                            title: request.displayTitle,
+                            subtitle: request.summary
+                        )
+                        
+                        if navigationPath.last == .generateProgress {
+                            navigationPath.removeLast()
+                        }
+                        navigationPath.append(.generatedResult(generated))
+                        promptText = ""
+                        selectedKeywords.removeAll()
+                    } catch {
+                        if navigationPath.last == .generateProgress {
+                            navigationPath.removeLast()
+                        }
+                        generationErrorMessage = error.localizedDescription
+                        showGenerationError = true
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    if navigationPath.last == .generateProgress {
+                        navigationPath.removeLast()
+                    }
+                    generationErrorMessage = error.localizedDescription
+                    showGenerationError = true
+                }
+            }
+        }
     }
 }
 
 // MARK: - Home Content Wrapper
 private struct HomeContentView: View {
+    @ObservedObject var contentStore: GeneratedContentStore
     @Binding var promptText: String
     @Binding var selectedKeywords: [String]
+    @Binding var detailImage: GeneratedImage?
     let onGenerate: () -> Void
+    let onRequireKeywords: () -> Void
     let onTapPro: () -> Void
     
     var body: some View {
@@ -84,33 +168,59 @@ private struct HomeContentView: View {
                 
                 InputBoxView(text: $promptText, keywords: $selectedKeywords)
                 
-                GenerateButtonView(title: "Generate", action: onGenerate)
-                    .padding(.top, 2)
+                GenerateButtonView(title: "Generate") {
+                    if selectedKeywords.isEmpty {
+                        onRequireKeywords()
+                    } else {
+                        onGenerate()
+                    }
+                }
+                .padding(.top, 2)
                 
                 // Last Generated
                 Text("Last Generated")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(AppFont.nippoMedium(16))
+                    .fontWeight(.bold)
                     .foregroundColor(.black)
                     .padding(.top, 6)
                 
-                LastGeneratedCardView(
-                    imageName: "sample_thumb_1",
-                    title: "Tur Tur Tur Sahur",
-                    subtitle: "Neo-pop vigilante"
-                )
-                .padding(.bottom, 4)
+                if let last = contentStore.lastGenerated {
+                    LastGeneratedCardView(
+                        image: last,
+                        onTap: { detailImage = last }
+                    )
+                    .padding(.bottom, 4)
+                } else {
+                    Text("Generate your first character to see it here.")
+                        .font(AppFont.nippoMedium(14))
+                        .foregroundColor(.black.opacity(0.6))
+                        .padding(.bottom, 4)
+                }
                 
                 // Favorites
                 Text("Favorites")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(AppFont.nippoMedium(16))
+                    .fontWeight(.bold)
                     .foregroundColor(.black)
                     .padding(.top, 4)
                 
-                FavoritesGridView()
+                if contentStore.favorites.isEmpty {
+                    Text("Tap the heart on a creation to add it to favorites.")
+                        .font(AppFont.nippoMedium(14))
+                        .foregroundColor(.black.opacity(0.6))
+                        .padding(.bottom, 72)
+                } else {
+                    FavoritesGridView(items: contentStore.favorites) { item in
+                        detailImage = item
+                    }
                     .padding(.bottom, 72)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 10)
+            .onTapGesture {
+                hideKeyboard()
+            }
         }
     }
 }
@@ -121,7 +231,8 @@ private struct HeaderView: View {
     var body: some View {
         HStack(alignment: .top) {
             Text("Who will you\nbe today?")
-                .font(.system(size: 32, weight: .black, design: .rounded))
+                .font(AppFont.nippoMedium(32))
+                .fontWeight(.black)
                 .foregroundColor(.black)
                 .multilineTextAlignment(.leading)
                 .lineSpacing(2)
@@ -177,14 +288,16 @@ private struct InputBoxView: View {
                             ForEach(keywords, id: \.self) { keyword in
                                 HStack(spacing: 6) {
                                     Text(keyword.capitalized)
-                                        .font(.system(size: 13, weight: .semibold))
+                                        .font(AppFont.nippoMedium(13))
+                                        .fontWeight(.semibold)
                                         .foregroundColor(.white)
                                     
                                     Button {
                                         removeKeyword(keyword)
                                     } label: {
                                         Image(systemName: "xmark")
-                                            .font(.system(size: 11, weight: .bold))
+                                            .font(AppFont.nippoMedium(11))
+                                            .fontWeight(.bold)
                                             .foregroundColor(.white.opacity(0.9))
                                             .padding(.leading, 2)
                                     }
@@ -210,7 +323,7 @@ private struct InputBoxView: View {
                     text: $currentInput,
                     onCommit: commitCurrentInput
                 )
-                .font(.system(size: 15))
+                .font(AppFont.nippoMedium(15))
                 .foregroundColor(.black)
                 .focused($isFocused)
                 .submitLabel(.done)
@@ -311,7 +424,8 @@ private struct GenerateButtonView: View {
                 
                 // Button text
                 Text(title)
-                    .font(.system(size: 20, weight: .black, design: .rounded))
+                    .font(AppFont.nippoMedium(20))
+                    .fontWeight(.black)
                     .foregroundColor(.white)
                     .shadow(color: .black.opacity(0.65), radius: 0, x: 0, y: 3)
             }
@@ -323,9 +437,8 @@ private struct GenerateButtonView: View {
 
 // MARK: - Last Generated Card ✅ FINAL SHADOW FIX
 private struct LastGeneratedCardView: View {
-    var imageName: String
-    var title: String
-    var subtitle: String
+    let image: GeneratedImage
+    let onTap: () -> Void
     
     var body: some View {
         ZStack {
@@ -338,7 +451,7 @@ private struct LastGeneratedCardView: View {
             
             // Main card
             HStack(spacing: 12) {
-                Image(imageName)
+                Image(uiImage: image.image)
                     .resizable()
                     .scaledToFill()
                     .frame(width: 80, height: 64)
@@ -349,12 +462,15 @@ private struct LastGeneratedCardView: View {
                     )
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .bold))
+                    Text(image.title)
+                        .font(AppFont.nippoMedium(16))
+                        .fontWeight(.bold)
                         .foregroundColor(.black)
-                    Text(subtitle)
-                        .font(.system(size: 13))
-                        .foregroundColor(.gray)
+                    if let subtitle = image.subtitle {
+                        Text(subtitle)
+                            .font(AppFont.nippoMedium(13))
+                            .foregroundColor(.gray)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
@@ -373,18 +489,15 @@ private struct LastGeneratedCardView: View {
                     )
             )
         }
+        .onTapGesture(perform: onTap)
     }
 }
 
 // MARK: - Favorites Grid ✅ FINAL SHADOW FIX
 private struct FavoritesGridView: View {
-    private let items: [FavoriteItem] = [
-        .init(image: "sample_thumb_1", title: "Tur Tur Tur Sahur", subtitle: "Neo-pop vigilante"),
-        .init(image: "sample_thumb_2", title: "Tur Tur Tur Sahur", subtitle: "Neo-pop vigilante"),
-        .init(image: "sample_thumb_3", title: "Tur Tur Tur Sahur", subtitle: "Neo-pop vigilante"),
-        .init(image: "sample_thumb_4", title: "Tur Tur Tur Sahur", subtitle: "Neo-pop vigilante"),
-    ]
-    
+    let items: [GeneratedImage]
+    let onSelect: (GeneratedImage) -> Void
+
     private let columns: [GridItem] = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
@@ -393,21 +506,15 @@ private struct FavoritesGridView: View {
     var body: some View {
         LazyVGrid(columns: columns, spacing: 12) {
             ForEach(items) { item in
-                FavoriteItemView(item: item)
+                FavoriteItemView(item: item, onTap: { onSelect(item) })
             }
         }
     }
 }
 
-private struct FavoriteItem: Identifiable {
-    let id = UUID()
-    let image: String
-    let title: String
-    let subtitle: String
-}
-
 private struct FavoriteItemView: View {
-    let item: FavoriteItem
+    let item: GeneratedImage
+    let onTap: () -> Void
     
     var body: some View {
         ZStack {
@@ -415,11 +522,11 @@ private struct FavoriteItemView: View {
             // Shadow behind frame
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.black.opacity(0.40))
-                .frame(height: 185)  // approx total
+                .frame(height: 220)
                 .offset(y: 7)
             
             VStack(alignment: .leading, spacing: 8) {
-                Image(item.image)
+                Image(uiImage: item.image)
                     .resizable()
                     .scaledToFill()
                     .frame(height: 110)
@@ -430,13 +537,16 @@ private struct FavoriteItemView: View {
                     )
                 
                 Text(item.title)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(AppFont.nippoMedium(15))
+                    .fontWeight(.bold)
                     .foregroundColor(.black)
                     .lineLimit(2)
                 
-                Text(item.subtitle)
-                    .font(.system(size: 13))
-                    .foregroundColor(.black.opacity(0.75))
+                if let subtitle = item.subtitle {
+                    Text(subtitle)
+                        .font(AppFont.nippoMedium(13))
+                        .foregroundColor(.black.opacity(0.75))
+                }
             }
             .padding(10)
             .background(
@@ -447,7 +557,10 @@ private struct FavoriteItemView: View {
                             .stroke(Color.black, lineWidth: 4)
                     )
             )
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: 220, alignment: .top)
         }
+        .onTapGesture(perform: onTap)
     }
 }
 
@@ -457,7 +570,7 @@ private enum BottomTab { case home, settings }
 private enum HomeRoute: Hashable {
     case generateDetails
     case generateProgress
-    case generatedResult
+    case generatedResult(GeneratedImage)
 }
 
 // MARK: - Firebase Anonymous Auth
@@ -472,6 +585,14 @@ private extension HomeView {
         } catch {
             print("⚠️ Failed to sign in anonymously: \(error.localizedDescription)")
         }
+    }
+}
+
+private extension View {
+    func hideKeyboard() {
+#if canImport(UIKit)
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+#endif
     }
 }
 
@@ -524,7 +645,8 @@ private struct TabButton: View {
                     .opacity(isSelected ? 1.0 : 0.55)
                 
                 Text(title)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(AppFont.nippoMedium(11))
+                    .fontWeight(.semibold)
                     .foregroundColor(isSelected ? .black : .black.opacity(0.55))
             }
             .frame(maxWidth: .infinity)
@@ -550,6 +672,16 @@ extension Color {
                   green: Double(g) / 255,
                   blue: Double(b) / 255,
                   opacity: Double(a) / 255)
+    }
+}
+
+enum Theme {
+    static let background = Color(hex: "#FBEEE3")
+}
+
+enum AppFont {
+    static func nippoMedium(_ size: CGFloat) -> Font {
+        Font.custom("Nippo-Medium", size: size)
     }
 }
 

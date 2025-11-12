@@ -23,7 +23,8 @@ struct PaywallView: View {
                             .padding(.top, 8)
                         
                         Text("Unlock Brainrot\nPremium")
-                            .font(.system(size: 36, weight: .black, design: .rounded))
+                            .font(AppFont.nippoMedium(36))
+                            .fontWeight(.black)
                             .foregroundColor(.black)
                             .multilineTextAlignment(.center)
                             .shadow(color: .black.opacity(0.08), radius: 2, x: 0, y: 4)
@@ -72,11 +73,13 @@ struct PaywallView: View {
             ForEach(PlanBenefit.allCases, id: \.self) { benefit in
                 HStack(alignment: .center, spacing: 12) {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 18, weight: .bold))
+                        .font(AppFont.nippoMedium(18))
+                        .fontWeight(.bold)
                         .foregroundStyle(Color.black, Color.white)
                     
                     Text(benefit.title)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(AppFont.nippoMedium(16))
+                        .fontWeight(.semibold)
                         .foregroundColor(.black)
                 }
             }
@@ -89,7 +92,8 @@ struct PaywallView: View {
     private var trialToggle: some View {
         HStack(spacing: 16) {
             Text("Not sure yet? Enable free trial")
-                .font(.system(size: 18, weight: .semibold))
+                .font(AppFont.nippoMedium(18))
+                .fontWeight(.semibold)
                 .foregroundColor(.black)
             
             Spacer()
@@ -177,7 +181,8 @@ struct PaywallView: View {
                     )
                     .overlay(
                         Text("Subscribe")
-                            .font(.system(size: 20, weight: .black, design: .rounded))
+                            .font(AppFont.nippoMedium(20))
+                            .fontWeight(.black)
                             .foregroundColor(.white)
                             .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 3)
                     )
@@ -190,7 +195,7 @@ struct PaywallView: View {
     
     private var legalFooter: some View {
         Text("By continuing, you agree to Privacy Policy\nand Terms & Condition")
-            .font(.system(size: 12, weight: .medium))
+            .font(AppFont.nippoMedium(12))
             .foregroundColor(.black.opacity(0.7))
             .multilineTextAlignment(.center)
     }
@@ -198,15 +203,18 @@ struct PaywallView: View {
     private var footnotes: some View {
         HStack(spacing: 18) {
             Button("Restore", action: {})
-                .font(.system(size: 12, weight: .semibold))
+                .font(AppFont.nippoMedium(12))
+                .fontWeight(.semibold)
                 .foregroundColor(.black)
             
             Button("Terms of Use", action: {})
-                .font(.system(size: 12, weight: .semibold))
+                .font(AppFont.nippoMedium(12))
+                .fontWeight(.semibold)
                 .foregroundColor(.black)
             
             Button("Privacy Policy", action: {})
-                .font(.system(size: 12, weight: .semibold))
+                .font(AppFont.nippoMedium(12))
+                .fontWeight(.semibold)
                 .foregroundColor(.black)
         }
     }
@@ -248,7 +256,8 @@ private struct PlanOptionView: View {
         VStack(alignment: .leading, spacing: 10) {
             if let badge {
                 Text(badge.uppercased())
-                    .font(.system(size: 12, weight: .bold))
+                    .font(AppFont.nippoMedium(12))
+                    .fontWeight(.bold)
                     .foregroundColor(.black)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
@@ -265,12 +274,13 @@ private struct PlanOptionView: View {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(AppFont.nippoMedium(18))
+                        .fontWeight(.semibold)
                         .foregroundColor(.black)
                     
                     if let subtitle {
                         Text(subtitle)
-                            .font(.system(size: 13, weight: .medium))
+                            .font(AppFont.nippoMedium(13))
                             .foregroundColor(.black.opacity(0.7))
                     }
                 }
@@ -288,7 +298,8 @@ private struct PlanOptionView: View {
                             .frame(width: 22, height: 22)
                             .overlay(
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 12, weight: .bold))
+                                    .font(AppFont.nippoMedium(12))
+                                    .fontWeight(.bold)
                                     .foregroundColor(.white)
                             )
                     }

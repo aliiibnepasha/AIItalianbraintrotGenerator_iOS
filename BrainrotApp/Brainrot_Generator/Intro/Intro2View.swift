@@ -54,14 +54,16 @@ struct Intro2View: View {
                 ZStack {
                     // Shadow layer (black)
                     Text("Create your own rot!")
-                        .font(.system(size: 28, weight: .black))
+                        .font(AppFont.nippoMedium(28))
+                        .fontWeight(.black)
                         .foregroundColor(.black)
                         .multilineTextAlignment(.center)
                         .offset(x: 3, y: 4) // bold shadow
                     
                     // Main white text
                     Text("Create your own rot!")
-                        .font(.system(size: 28, weight: .black))
+                        .font(AppFont.nippoMedium(28))
+                        .fontWeight(.black)
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                 }
@@ -82,7 +84,8 @@ struct Intro2View: View {
                             .frame(height: 60)
 
                         Text("Next")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(AppFont.nippoMedium(20))
+                            .fontWeight(.bold)
                             .foregroundColor(.white)
                     }
                 }

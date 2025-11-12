@@ -1,15 +1,12 @@
 import SwiftUI
+import UIKit
 
 struct GalleryView: View {
     
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var contentStore: GeneratedContentStore
+    @State private var detailImage: GeneratedImage?
     
-    private let items: [GalleryItem] = [
-        GalleryItem(title: "Tur Tur Tur Sahur", subtitle: "Neo-pop vigilante"),
-        GalleryItem(title: "Mamma Mia Chaos", subtitle: "Retro rot vibe"),
-        GalleryItem(title: "Shark Drip", subtitle: "Coastal vigilante"),
-        GalleryItem(title: "Cafe Gossip", subtitle: "Latte dramatics")
-    ]
     private let columns: [GridItem] = [
         GridItem(.flexible(), spacing: 18),
         GridItem(.flexible(), spacing: 18)
@@ -17,27 +14,53 @@ struct GalleryView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "#FBEEE3")
+            Theme.background
                 .ignoresSafeArea()
             
             VStack(spacing: 20) {
                 header
                     .padding(.top, 8)
                 
-                ScrollView {
-                    LazyVGrid(columns: columns, spacing: 18) {
-                        ForEach(items) { item in
-                            GalleryCardView(item: item)
-                        }
+                if contentStore.gallery.isEmpty {
+                    VStack(spacing: 12) {
+                        Text("Your creations will appear here")
+                            .font(AppFont.nippoMedium(18))
+                            .foregroundColor(.black)
+                        Text("Generate an image to see it in your gallery.")
+                            .font(AppFont.nippoMedium(14))
+                            .foregroundColor(.black.opacity(0.7))
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
-                    .padding(.bottom, 24)
+                    .padding(.top, 40)
+                } else {
+                    ScrollView {
+                        LazyVGrid(columns: columns, spacing: 18) {
+                            ForEach(contentStore.gallery) { item in
+                                GalleryCardView(item: item)
+                                    .onTapGesture {
+                                        detailImage = item
+                                    }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 8)
+                        .padding(.bottom, 24)
+                    }
                 }
             }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(item: $detailImage) { image in
+            ImageDetailView(
+                image: image,
+                onClose: { detailImage = nil },
+                onDelete: {
+                    contentStore.delete(image)
+                    detailImage = nil
+                }
+            )
+            .environmentObject(contentStore)
+        }
     }
     
     private var header: some View {
@@ -47,7 +70,8 @@ struct GalleryView: View {
             Spacer()
             
             Text("Gallery")
-                .font(.system(size: 34, weight: .black, design: .rounded))
+                .font(AppFont.nippoMedium(34))
+                .fontWeight(.black)
                 .foregroundColor(.black)
             
             Spacer()
@@ -74,7 +98,8 @@ struct GalleryView: View {
                     .frame(width: 40, height: 40)
                     .overlay(
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .bold))
+                            .font(AppFont.nippoMedium(16))
+                            .fontWeight(.bold)
                             .foregroundColor(.black)
                     )
             }
@@ -83,19 +108,20 @@ struct GalleryView: View {
     }
 }
 
-private struct GalleryItem: Identifiable {
-    let id = UUID()
-    let title: String
-    let subtitle: String
-    let image: String = "generated_placeholder"
+struct GalleryView_Previews: PreviewProvider {
+    static var previews: some View {
+        GalleryView()
+            .previewDevice("iPhone 14 Pro")
+            .environmentObject(GeneratedContentStore())
+    }
 }
 
 private struct GalleryCardView: View {
-    let item: GalleryItem
+    let item: GeneratedImage
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Image(item.image)
+            Image(uiImage: item.image)
                 .resizable()
                 .scaledToFill()
                 .frame(height: 110)
@@ -108,13 +134,16 @@ private struct GalleryCardView: View {
             
             VStack(alignment: .leading, spacing: 6) {
                 Text(item.title)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(AppFont.nippoMedium(16))
+                    .fontWeight(.bold)
                     .foregroundColor(.black)
                     .lineLimit(2)
                 
-                Text(item.subtitle)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.black.opacity(0.75))
+                if let subtitle = item.subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(AppFont.nippoMedium(14))
+                        .foregroundColor(.black.opacity(0.75))
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -131,13 +160,5 @@ private struct GalleryCardView: View {
                 .shadow(color: Color.black.opacity(0.18), radius: 10, x: 0, y: 8)
         )
     }
+    
 }
-
-struct GalleryView_Previews: PreviewProvider {
-    static var previews: some View {
-        GalleryView()
-            .previewDevice("iPhone 14 Pro")
-    }
-}
-
-

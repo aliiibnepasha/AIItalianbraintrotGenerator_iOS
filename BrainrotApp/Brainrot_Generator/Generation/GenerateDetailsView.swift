@@ -2,7 +2,8 @@ import SwiftUI
 
 // MARK: - Screen
 struct GenerateDetailsView: View {
-    var onGenerate: () -> Void = {}
+    let keywords: [String]
+    let onGenerate: (GenerationRequest) -> Void
     // Selections (all single-select, independent)
     @State private var selectedGenderIndex: Int = 0
     @State private var selectedMoodIndex: Int = 0
@@ -22,7 +23,7 @@ struct GenerateDetailsView: View {
     @Environment(\.dismiss) private var dismiss
 
     // Colors (no custom hex helpers to avoid ambiguity)
-    private let bgColor   = SwiftUI.Color(red: 251/255, green: 238/255, blue: 227/255) // #FBEEE3
+    private let bgColor   = Theme.background
     private let pinkColor = SwiftUI.Color(red: 215/255, green: 38/255,  blue: 61/255) // #D7263D
     private let yellow    = SwiftUI.Color(red: 242/255, green: 201/255,  blue:  76/255) // #F2C94C
 
@@ -42,7 +43,8 @@ struct GenerateDetailsView: View {
                             .alignmentGuide(.top) { d in d[.top] - 4 }
 
                         SwiftUI.Text("Customize\nYour Chaos")
-                            .font(.system(size: 32, weight: .black, design: .rounded))
+                            .font(AppFont.nippoMedium(32))
+                            .fontWeight(.black)
                             .foregroundColor(.black)
                             .lineSpacing(2)
                             .padding(.top, 5)
@@ -87,7 +89,17 @@ struct GenerateDetailsView: View {
                     AspectRow(selected: $selectedAspect, selectionColor: pinkColor)
 
                     // Generate Button
-                    GenerateButton(title: "Generate", action: onGenerate)
+                    GenerateButton(title: "Generate") {
+                        let request = GenerationRequest(
+                            keywords: keywords,
+                            gender: genderItems[selectedGenderIndex],
+                            mood: moodItems[selectedMoodIndex],
+                            accentStrength: accentStrength,
+                            outfit: outfitItems[selectedOutfit].title,
+                            aspect: selectedAspect
+                        )
+                        onGenerate(request)
+                    }
                     .padding(.vertical, 10)
                 }
                 .padding(.horizontal, 16)
@@ -101,7 +113,7 @@ struct GenerateDetailsView: View {
 }
 
 // MARK: - Models
-private enum Aspect: String, CaseIterable, Identifiable {
+enum Aspect: String, CaseIterable, Identifiable {
     case oneOne = "1:1"
     case fourThree = "4:3"
     case twoThree = "2:3"
@@ -115,6 +127,89 @@ private struct OutfitItem {
     let title: String
 }
 
+struct GenerationRequest: Hashable {
+    let keywords: [String]
+    let gender: String
+    let mood: String
+    let accentStrength: Double
+    let outfit: String
+    let aspect: Aspect
+    
+    func composedPrompt() -> String {
+        let fusedCharacters = fusedKeywordPhrase()
+        let accentDescriptor = accentIntensityDescriptor()
+        let moodDescriptor = mood.lowercased()
+
+        return """
+        Create a surreal and chaotic 'brain rot' hybrid creature design that is a literal fusion of \(fusedCharacters). 
+        Do NOT make it look like a normal person — it should be a creature or hybrid lifeform where the anatomy and features of each element are physically merged together. 
+        For example, parts of the body, texture, and shape should clearly show details from both \(fusedCharacters). 
+        
+        Gender style: \(gender). Mood: \(mood). Accent strength: \(accentDescriptor). Outfit style: \(outfit). 
+        The overall vibe is absurdist and over-saturated, combining animal, object, and human chaos in one. 
+        Ultra-detailed, hyper-colorful, cinematic lighting, stylized 4K render, in the art style of 'brain rot meme universe'.
+        Setting: a hyper-digital \(moodDescriptor) environment loaded with neon signage, floating emojis, stickers, graffiti text, and glitch effects.
+        Aspect ratio: \(aspect.rawValue)
+                The fusion should feel bizarre, vibrant, meme-like, and overloaded with digital brainrot energy — glowing emojis, chaotic lighting, colorful cyber aesthetics, viral meme stickers, digital screens and emojis floating around. 
+
+        
+        """
+    }
+
+    
+    var displayTitle: String {
+        let joined = keywords.joined(separator: ", ").capitalized
+        return joined.isEmpty ? "Custom Brainrot Character" : joined
+    }
+    
+    var summary: String {
+        "\(mood) • \(outfit) • \(aspect.rawValue)"
+    }
+    
+    var negativePrompt: String {
+        """
+        avoid plain humans, avoid realistic human faces, avoid normal people, avoid photorealism,
+        avoid fashion poses, avoid clean studio portraits, avoid animals alone, avoid realistic anatomy,
+        focus on hybrid fusion, make the creature surreal, weird, exaggerated, stylized, meme-like
+        """
+    }
+    
+    private func fusedKeywordPhrase() -> String {
+        let cleaned = keywords
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        
+        guard !cleaned.isEmpty else {
+            return "an imaginative persona"
+        }
+        
+        if cleaned.count == 1 {
+            return cleaned[0]
+        }
+        
+        if cleaned.count == 2 {
+            return "\(cleaned[0]) and \(cleaned[1])"
+        }
+        
+        let allButLast = cleaned.dropLast().joined(separator: ", ")
+        if let last = cleaned.last {
+            return "\(allButLast), and \(last)"
+        }
+        return cleaned.joined(separator: ", ")
+    }
+    
+    private func accentIntensityDescriptor() -> String {
+        switch accentStrength {
+        case ..<0.3:
+            return "mild"
+        case 0.3..<0.7:
+            return "balanced"
+        default:
+            return "over the top"
+        }
+    }
+}
+
 // MARK: - Components
 
 // Section Title
@@ -123,7 +218,8 @@ private struct SectionLabel: View {
     init(_ text: String) { self.text = text }
     var body: some View {
         SwiftUI.Text(text)
-            .font(.system(size: 15, weight: .bold))
+            .font(AppFont.nippoMedium(15))
+            .fontWeight(.bold)
             .foregroundColor(.black)
             .padding(.top, 2)
     }
@@ -150,7 +246,8 @@ private struct BackButton: View {
                     .frame(width: 40, height: 40)
                     .overlay(
                         SwiftUI.Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .bold))
+                            .font(AppFont.nippoMedium(16))
+                            .fontWeight(.bold)
                             .foregroundColor(.black)
                     )
             }
@@ -181,7 +278,8 @@ private struct SelectPill: View {
                 .frame(height: 56)
                 .overlay(
                     SwiftUI.Text(title)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(AppFont.nippoMedium(16))
+                        .fontWeight(.semibold)
                         .foregroundColor(isSelected ? .white : .black)
                 )
         }
@@ -252,7 +350,7 @@ private struct AccentSlider: View {
                 SwiftUI.Spacer()
                 SwiftUI.Text("Over-The Top")
             }
-            .font(.system(size: 13, weight: .regular))
+            .font(AppFont.nippoMedium(13))
             .foregroundColor(SwiftUI.Color.black.opacity(0.65))
             .padding(.horizontal, 12)
         }
@@ -289,7 +387,8 @@ private struct OutfitRow: View {
                                 )
 
                             SwiftUI.Text(items[i].title)
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(AppFont.nippoMedium(13))
+                                .fontWeight(.semibold)
                                 .foregroundColor(selected ? .white : .black)
                                 .frame(maxWidth: .infinity)
                         }
@@ -350,7 +449,8 @@ private struct AspectChip: View {
                 .frame(width: 66, height: 44)
                 .overlay(
                     SwiftUI.Text(title)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(AppFont.nippoMedium(14))
+                        .fontWeight(.semibold)
                         .foregroundColor(isSelected ? .white : .black)
                 )
         }
@@ -381,7 +481,8 @@ private struct GenerateButton: View {
                     )
 
                 SwiftUI.Text(title)
-                    .font(.system(size: 20, weight: .black, design: .rounded))
+                    .font(AppFont.nippoMedium(20))
+                    .fontWeight(.black)
                     .foregroundColor(.white)
                     .shadow(color: .black.opacity(0.65), radius: 0, x: 0, y: 3)
             }
@@ -393,7 +494,7 @@ private struct GenerateButton: View {
 // MARK: - Preview
 struct GenerateDetailsView_Previews: PreviewProvider {
     static var previews: some View {
-        GenerateDetailsView()
+        GenerateDetailsView(keywords: ["Preview"], onGenerate: { _ in })
             .previewDisplayName("Generate Details")
     }
 }

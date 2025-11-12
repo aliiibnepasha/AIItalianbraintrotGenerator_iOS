@@ -32,6 +32,11 @@
 		5DA4AF842EC44AD60036EFCC /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 5DA4AF832EC44AD60036EFCC /* FirebaseFirestore */; };
 		5DA4AF862EC44AD60036EFCC /* FirebaseInstallations in Frameworks */ = {isa = PBXBuildFile; productRef = 5DA4AF852EC44AD60036EFCC /* FirebaseInstallations */; };
 		5DA4AF882EC44AD60036EFCC /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 5DA4AF872EC44AD60036EFCC /* FirebaseMessaging */; };
+		5DA4AF952EC45FCD0036EFCC /* Nippo-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 5DA4AF8D2EC45FCD0036EFCC /* Nippo-Medium.otf */; };
+		5DA4AF9C2EC47A5C0036EFCC /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA4AF9B2EC47A5C0036EFCC /* ActivityView.swift */; };
+		5DA4AF9E2EC47A5C0036EFCC /* ImageDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA4AF9D2EC47A5C0036EFCC /* ImageDetailView.swift */; };
+		5DA4AFA22EC484890036EFCC /* GeneratedContentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA4AFA12EC484890036EFCC /* GeneratedContentStore.swift */; };
+		5DA4AFA42EC484890036EFCC /* ImageGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA4AFA32EC484890036EFCC /* ImageGenerationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +57,12 @@
 		5DA4AEDC2EC347DC0036EFCC /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		5DA4AEDF2EC3597C0036EFCC /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
 		5DA4AF742EC4498E0036EFCC /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		5DA4AF8D2EC45FCD0036EFCC /* Nippo-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nippo-Medium.otf"; sourceTree = "<group>"; };
+		5DA4AF9A2EC46E0C0036EFCC /* Brainrot-Generator-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Brainrot-Generator-Info.plist"; sourceTree = SOURCE_ROOT; };
+		5DA4AF9B2EC47A5C0036EFCC /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
+		5DA4AF9D2EC47A5C0036EFCC /* ImageDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDetailView.swift; sourceTree = "<group>"; };
+		5DA4AFA12EC484890036EFCC /* GeneratedContentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratedContentStore.swift; sourceTree = "<group>"; };
+		5DA4AFA32EC484890036EFCC /* ImageGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageGenerationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,13 +105,16 @@
 		13B6ADF22EBDB7AB00A0B612 /* Brainrot_Generator */ = {
 			isa = PBXGroup;
 			children = (
+				5DA4AF9A2EC46E0C0036EFCC /* Brainrot-Generator-Info.plist */,
 				13B6ADF32EBDB7AB00A0B612 /* Brainrot_GeneratorApp.swift */,
 				13B6AE012EBDC61700A0B612 /* Splash */,
 				5DA4AEDD2EC347DC0036EFCC /* Paywall */,
 				13B6AE092EBE0CD100A0B612 /* Home */,
 				5DA4AEE02EC3597C0036EFCC /* Gallery */,
 				13B6AE0F2EBE240900A0B612 /* Generation */,
+				5DA4AF9F2EC47A5C0036EFCC /* Shared */,
 				13B6AE022EBDC65B00A0B612 /* Intro */,
+				5DA4AF902EC45FCD0036EFCC /* Fonts */,
 				13B6ADF72EBDB7B000A0B612 /* Assets.xcassets */,
 				5DA4AECF2EC31B6F0036EFCC /* Settings */,
 				13B6ADF92EBDB7B000A0B612 /* Preview Content */,
@@ -177,6 +191,25 @@
 			path = Gallery;
 			sourceTree = "<group>";
 		};
+		5DA4AF902EC45FCD0036EFCC /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				5DA4AF8D2EC45FCD0036EFCC /* Nippo-Medium.otf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		5DA4AF9F2EC47A5C0036EFCC /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				5DA4AF9B2EC47A5C0036EFCC /* ActivityView.swift */,
+				5DA4AF9D2EC47A5C0036EFCC /* ImageDetailView.swift */,
+				5DA4AFA12EC484890036EFCC /* GeneratedContentStore.swift */,
+				5DA4AFA32EC484890036EFCC /* ImageGenerationService.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -239,6 +272,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				13B6ADFB2EBDB7B000A0B612 /* Preview Assets.xcassets in Resources */,
+				5DA4AF952EC45FCD0036EFCC /* Nippo-Medium.otf in Resources */,
 				13B6ADF82EBDB7B000A0B612 /* Assets.xcassets in Resources */,
 				5DA4AF752EC4498E0036EFCC /* GoogleService-Info.plist in Resources */,
 			);
@@ -251,10 +285,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5DA4AF9C2EC47A5C0036EFCC /* ActivityView.swift in Sources */,
 				5DA4AED42EC3252F0036EFCC /* LanguageSelectionView.swift in Sources */,
 				5DA4AEDE2EC347DC0036EFCC /* PaywallView.swift in Sources */,
 				13B6AE062EBDCF1800A0B612 /* Intro2View.swift in Sources */,
 				5DA4AED82EC33F140036EFCC /* GeneratedResultView.swift in Sources */,
+				5DA4AF9E2EC47A5C0036EFCC /* ImageDetailView.swift in Sources */,
+				5DA4AFA22EC484890036EFCC /* GeneratedContentStore.swift in Sources */,
+				5DA4AFA42EC484890036EFCC /* ImageGenerationService.swift in Sources */,
 				5DA4AEE12EC3597C0036EFCC /* GalleryView.swift in Sources */,
 				5DA4AED02EC31B6F0036EFCC /* SettingsView.swift in Sources */,
 				13B6ADF62EBDB7AB00A0B612 /* SplashView.swift in Sources */,
@@ -395,6 +433,8 @@
 				DEVELOPMENT_TEAM = V5QZS9L352;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Brainrot-Generator-Info.plist";
+				INFOPLIST_KEY_UIAppFonts = "Nippo-Medium.otf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -424,6 +464,8 @@
 				DEVELOPMENT_TEAM = V5QZS9L352;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Brainrot-Generator-Info.plist";
+				INFOPLIST_KEY_UIAppFonts = "Nippo-Medium.otf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

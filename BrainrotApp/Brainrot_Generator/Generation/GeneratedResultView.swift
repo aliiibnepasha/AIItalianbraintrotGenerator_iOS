@@ -1,16 +1,17 @@
 import SwiftUI
-
 struct GeneratedResultView: View {
+    @EnvironmentObject private var contentStore: GeneratedContentStore
     
-    var onShare: () -> Void = {}
-    var onGenerateAgain: () -> Void = {}
+    let image: GeneratedImage
+    var onClose: () -> Void
+    var onGenerateAgain: () -> Void
     
-    private let bgColor = Color(hex: "#FBEEE3")
-    private let previewImageName = "generated_placeholder"
+    @State private var shareItems: [Any] = []
+    @State private var showShareSheet: Bool = false
     
     var body: some View {
         ZStack {
-            bgColor.ignoresSafeArea()
+            Theme.background.ignoresSafeArea()
             
             VStack(spacing: 0) {
                 VStack(spacing: 24) {
@@ -19,8 +20,9 @@ struct GeneratedResultView: View {
                     generatedPreview
                     
                     VStack(spacing: 16) {
-                        ShareButton(action: onShare)
-                        GenerateAgainButton(action: onGenerateAgain)
+                        favoriteButton
+                        shareButton
+                        generateAgainButton
                     }
                 }
                 .padding(.horizontal, 24)
@@ -28,54 +30,100 @@ struct GeneratedResultView: View {
                 
                 Spacer()
             }
-        .navigationBarBackButtonHidden(true)
-        .toolbar(.hidden, for: .navigationBar)
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ActivityView(activityItems: shareItems)
         }
     }
     
     private var header: some View {
         HStack {
-            BackButton(action: onGenerateAgain)
+            Button(action: onClose) {
+                headerCloseButton
+            }
+            .buttonStyle(.plain)
             
             Spacer()
             
-            Button(action: {}) {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.black)
-            }
-            .opacity(0) // Hidden placeholder for layout symmetry
+            Spacer().frame(width: 40)
         }
         .overlay(
             Text("Ai Brainrot")
-                .font(.system(size: 28, weight: .black, design: .rounded))
+                .font(AppFont.nippoMedium(28))
+                .fontWeight(.black)
                 .foregroundColor(.black)
         )
     }
     
-    private var generatedPreview: some View {
-        Image(previewImageName)
-            .resizable()
-            .scaledToFill()
-            .frame(height: 260)
-            .frame(maxWidth: .infinity)
-            .clipShape(RoundedRectangle(cornerRadius: 28))
-            .overlay(
-                RoundedRectangle(cornerRadius: 28)
-                    .stroke(Color.black, lineWidth: 6)
-            )
-            .shadow(color: .black.opacity(0.18), radius: 16, x: 0, y: 14)
+    private var headerCloseButton: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.black.opacity(0.40))
+                .frame(width: 40, height: 40)
+                .offset(y: 5)
+            
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.black, lineWidth: 4)
+                )
+                .frame(width: 40, height: 40)
+                .overlay(
+                    Image(systemName: "chevron.left")
+                        .font(AppFont.nippoMedium(16))
+                        .fontWeight(.bold)
+                        .foregroundColor(.black)
+                )
+        }
     }
-}
-
-// MARK: - Components
-
-private struct ShareButton: View {
-    let action: () -> Void
     
-    var body: some View {
-        Button(action: action) {
+    private var generatedPreview: some View {
+        VStack(spacing: 12) {
+            Image(uiImage: image.image)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 28))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28)
+                        .stroke(Color.black, lineWidth: 6)
+                )
+                .shadow(color: .black.opacity(0.18), radius: 16, x: 0, y: 14)
+            
+            VStack(spacing: 4) {
+                Text(image.title)
+                    .font(AppFont.nippoMedium(20))
+                    .fontWeight(.bold)
+                    .foregroundColor(.black)
+                
+                if let subtitle = image.subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(AppFont.nippoMedium(15))
+                        .foregroundColor(.black.opacity(0.7))
+                }
+            }
+        }
+    }
+    
+    private var shareButton: some View {
+        Button {
+            shareItems = [image.image]
+            DispatchQueue.main.async {
+                showShareSheet = true
+            }
+            DispatchQueue.main.async {
+                showShareSheet = true
+            }
+        } label: {
             ZStack {
+                RoundedRectangle(cornerRadius: 26)
+                    .fill(Color.black.opacity(0.45))
+                    .frame(height: 60)
+                    .offset(y: 5)
+                
                 RoundedRectangle(cornerRadius: 26)
                     .fill(Color.white)
                     .overlay(
@@ -83,21 +131,55 @@ private struct ShareButton: View {
                             .stroke(Color.black, lineWidth: 4)
                     )
                     .frame(height: 60)
-                
-                Text("Share")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.black)
+                    .overlay(
+                        HStack(spacing: 8) {
+                            Image(systemName: "square.and.arrow.up")
+                                .foregroundColor(.black)
+                            Text("Share")
+                                .font(AppFont.nippoMedium(18))
+                                .fontWeight(.semibold)
+                                .foregroundColor(.black)
+                        }
+                    )
             }
         }
         .buttonStyle(.plain)
     }
-}
-
-private struct GenerateAgainButton: View {
-    let action: () -> Void
     
-    var body: some View {
-        Button(action: action) {
+    private var favoriteButton: some View {
+        Button {
+            contentStore.toggleFavorite(image)
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 26)
+                    .fill(Color.black.opacity(0.45))
+                    .frame(height: 60)
+                    .offset(y: 5)
+                
+                RoundedRectangle(cornerRadius: 26)
+                    .fill(Color(hex: "#F2C94C"))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 26)
+                            .stroke(Color.black, lineWidth: 4)
+                    )
+                    .frame(height: 60)
+                    .overlay(
+                        HStack(spacing: 8) {
+                            Image(systemName: contentStore.isFavorite(image) ? "heart.fill" : "heart")
+                                .foregroundColor(.black)
+                            Text(contentStore.isFavorite(image) ? "Favorited" : "Favorite")
+                                .font(AppFont.nippoMedium(18))
+                                .fontWeight(.semibold)
+                                .foregroundColor(.black)
+                        }
+                    )
+            }
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private var generateAgainButton: some View {
+        Button(action: onGenerateAgain) {
             ZStack {
                 RoundedRectangle(cornerRadius: 26)
                     .fill(Color.black.opacity(0.45))
@@ -115,7 +197,8 @@ private struct GenerateAgainButton: View {
                     )
                     .overlay(
                         Text("Generate Again")
-                            .font(.system(size: 18, weight: .bold))
+                            .font(AppFont.nippoMedium(18))
+                            .fontWeight(.bold)
                             .foregroundColor(.white)
                             .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 3)
                     )
@@ -125,40 +208,18 @@ private struct GenerateAgainButton: View {
     }
 }
 
-private struct BackButton: View {
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.black.opacity(0.40))
-                    .frame(width: 40, height: 40)
-                    .offset(y: 5)
-                
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.black, lineWidth: 4)
-                    )
-                    .frame(width: 40, height: 40)
-                    .overlay(
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.black)
-                    )
-            }
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 struct GeneratedResultView_Previews: PreviewProvider {
     static var previews: some View {
-        GeneratedResultView()
-            .previewDevice("iPhone 14 Pro")
+        let sampleImage = UIImage(named: "generated_placeholder") ?? UIImage()
+        let generated = GeneratedImage(image: sampleImage, title: "Preview Character", subtitle: "Mood • Outfit • 1:1", fileName: "preview")
+        let store = GeneratedContentStore()
+        store.loadPreview([generated])
+        return GeneratedResultView(
+            image: generated,
+            onClose: {},
+            onGenerateAgain: {}
+        )
+        .environmentObject(store)
     }
 }
-
 

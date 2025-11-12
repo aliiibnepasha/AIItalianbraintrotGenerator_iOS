@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SettingsView: View {
     
+    @EnvironmentObject private var contentStore: GeneratedContentStore
+    
     @State private var selectedLanguage: String = "English"
     @State private var showLanguagePicker: Bool = false
     @State private var showPaywall: Bool = false
@@ -19,14 +21,15 @@ struct SettingsView: View {
         
         NavigationStack {
             ZStack {
-                Color(hex: "#FBEEE3")
+                Theme.background
                     .ignoresSafeArea()
                 
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
                         
                         Text("Setting")
-                            .font(.system(size: 32, weight: .black, design: .rounded))
+                            .font(AppFont.nippoMedium(32))
+                            .fontWeight(.black)
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.top, 18)
@@ -53,9 +56,11 @@ struct SettingsView: View {
             }
             .navigationDestination(isPresented: $showLanguagePicker) {
                 LanguageSelectionView(selectedLanguage: $selectedLanguage)
+                    .environmentObject(contentStore)
             }
             .navigationDestination(isPresented: $showGallery) {
                 GalleryView()
+                    .environmentObject(contentStore)
             }
             .navigationBarHidden(true)
         }
@@ -107,13 +112,15 @@ private struct PremiumBanner: View {
                                 .frame(width: 56, height: 56)
                             
                             Image(systemName: "crown.fill")
-                                .font(.system(size: 28, weight: .bold))
+                                .font(AppFont.nippoMedium(28))
+                                .fontWeight(.bold)
                                 .foregroundColor(.black)
                                 .offset(y: -2)
                         }
                         
                         Text("Get Premium")
-                            .font(.system(size: 20, weight: .black, design: .rounded))
+                            .font(AppFont.nippoMedium(20))
+                            .fontWeight(.black)
                             .foregroundColor(.white)
                             .shadow(color: .black.opacity(0.45), radius: 0, x: 0, y: 3)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -165,11 +172,12 @@ private struct SettingsButton: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(title)
-                                .font(.system(size: 17, weight: .semibold))
+                                .font(AppFont.nippoMedium(17))
+                                .fontWeight(.semibold)
                                 .foregroundColor(.black)
                             if let description {
                                 Text(description)
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(AppFont.nippoMedium(12))
                                     .foregroundColor(.black.opacity(0.55))
                             }
                         }
@@ -190,7 +198,8 @@ private struct SettingsButton: View {
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {
         SettingsView()
-            .background(Color(hex: "#FBEEE3"))
+            .background(Theme.background)
+            .environmentObject(GeneratedContentStore())
     }
 }
 

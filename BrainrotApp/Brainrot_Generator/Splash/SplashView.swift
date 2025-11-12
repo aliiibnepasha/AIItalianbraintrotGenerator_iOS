@@ -16,7 +16,8 @@ struct SplashView: View {
             
             // ✅ Animated Text
             Text("ITALIAN\nBRAINROT")
-                .font(.system(size: 48, weight: .black))
+                .font(AppFont.nippoMedium(48))
+                .fontWeight(.black)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.white)
                 .shadow(color: .black, radius: 4, x: 3, y: 3)

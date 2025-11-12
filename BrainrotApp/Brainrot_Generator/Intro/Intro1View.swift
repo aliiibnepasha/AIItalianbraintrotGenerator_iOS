@@ -48,14 +48,16 @@ struct Intro1View: View {
                 ZStack(alignment: .center) {
                     // Shadow base layer (black)
                     Text("Enter the World of\nItalian Brainrot!")
-                        .font(.system(size: 28, weight: .black))
+                        .font(AppFont.nippoMedium(28))
+                        .fontWeight(.black)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.black)
                         .offset(x: 3, y: 4)  // heavier bottom shadow
                     
                     // Main white text
                     Text("Enter the World of\nItalian Brainrot!")
-                        .font(.system(size: 28, weight: .black))
+                        .font(AppFont.nippoMedium(28))
+                        .fontWeight(.black)
                         .multilineTextAlignment(.center)
                         .foregroundColor(.white)
                 }
@@ -74,7 +76,8 @@ struct Intro1View: View {
                             .frame(height: 60)
 
                         Text("Next")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(AppFont.nippoMedium(20))
+                            .fontWeight(.bold)
                             .foregroundColor(.white)
                     }
                 }
