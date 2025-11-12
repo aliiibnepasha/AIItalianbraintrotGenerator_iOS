@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAuth
 
 // MARK: - Home Screen (Root)
 struct HomeView: View {
@@ -7,6 +8,7 @@ struct HomeView: View {
     @State private var selectedTab: BottomTab = .home
     @State private var navigationPath: [HomeRoute] = []
     @State private var showPaywall: Bool = false
+    @State private var hasAuthenticated: Bool = false
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -61,6 +63,9 @@ struct HomeView: View {
             if newValue != .home {
                 navigationPath.removeAll()
             }
+        }
+        .task {
+            await ensureAnonymousSignIn()
         }
     }
 }
@@ -453,6 +458,21 @@ private enum HomeRoute: Hashable {
     case generateDetails
     case generateProgress
     case generatedResult
+}
+
+// MARK: - Firebase Anonymous Auth
+private extension HomeView {
+    func ensureAnonymousSignIn() async {
+        guard !hasAuthenticated else { return }
+        do {
+            if Auth.auth().currentUser == nil {
+                _ = try await Auth.auth().signInAnonymously()
+            }
+            hasAuthenticated = true
+        } catch {
+            print("⚠️ Failed to sign in anonymously: \(error.localizedDescription)")
+        }
+    }
 }
 
 private struct CustomTabBarView: View {

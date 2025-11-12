@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Firebase
 
 private enum AppFlowStep {
     case splash
@@ -18,6 +19,10 @@ private enum AppFlowStep {
 @main
 struct Brainrot_GeneratorApp: App {
     @State private var step: AppFlowStep = .splash
+    
+    init() {
+        FirebaseApp.configure()
+    }
     
     var body: some Scene {
         WindowGroup {
