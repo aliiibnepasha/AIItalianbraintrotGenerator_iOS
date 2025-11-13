@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct Intro1View: View {
+    @EnvironmentObject private var localizationManager: LocalizationManager
     var onNext: () -> Void = {}
     
     @State private var animateSticker = false
@@ -47,7 +48,7 @@ struct Intro1View: View {
                 // ✅ Title with thick dark shadow
                 ZStack(alignment: .center) {
                     // Shadow base layer (black)
-                    Text("Enter the World of\nItalian Brainrot!")
+                    Text(L10n.Intro.One.title)
                         .font(AppFont.nippoMedium(28))
                         .fontWeight(.black)
                         .multilineTextAlignment(.center)
@@ -55,7 +56,7 @@ struct Intro1View: View {
                         .offset(x: 3, y: 4)  // heavier bottom shadow
                     
                     // Main white text
-                    Text("Enter the World of\nItalian Brainrot!")
+                    Text(L10n.Intro.One.title)
                         .font(AppFont.nippoMedium(28))
                         .fontWeight(.black)
                         .multilineTextAlignment(.center)
@@ -75,7 +76,7 @@ struct Intro1View: View {
                             .scaledToFit()
                             .frame(height: 60)
 
-                        Text("Next")
+                        Text(L10n.Intro.next)
                             .font(AppFont.nippoMedium(20))
                             .fontWeight(.bold)
                             .foregroundColor(.white)
@@ -96,8 +97,10 @@ struct Intro1View_Previews: PreviewProvider {
         Group {
             Intro1View()
                 .previewDevice("iPhone SE (3rd generation)")
+                .environmentObject(LocalizationManager.shared)
             Intro1View()
                 .previewDevice("iPhone 14 Pro Max")
+                .environmentObject(LocalizationManager.shared)
         }
     }
 }

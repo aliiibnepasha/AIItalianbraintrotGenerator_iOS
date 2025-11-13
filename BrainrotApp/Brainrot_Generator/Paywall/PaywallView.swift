@@ -2,9 +2,17 @@ import SwiftUI
 
 struct PaywallView: View {
     
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @EnvironmentObject private var purchaseManager: PurchaseManager
+    @EnvironmentObject private var usageManager: UsageManager
+    @Environment(\.openURL) private var openURL
+    @Environment(\.dismiss) private var dismiss
     // MARK: - State
     @State private var enableFreeTrial: Bool = false
-    @State private var selectedPlan: Plan = .monthly
+    @State private var selectedPlan: SubscriptionPlan = .monthly
+    @State private var isPurchasing: Bool = false
+    @State private var purchaseErrorMessage: String?
+    @State private var showPurchaseError: Bool = false
     
     // MARK: - Constants
     private let backgroundColor = Color(hex: "#E5F974")
@@ -22,7 +30,7 @@ struct PaywallView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.top, 8)
                         
-                        Text("Unlock Brainrot\nPremium")
+                        Text(L10n.Paywall.heroTitle)
                             .font(AppFont.nippoMedium(36))
                             .fontWeight(.black)
                             .foregroundColor(.black)
@@ -52,6 +60,13 @@ struct PaywallView: View {
         .onAppear {
             animateHero = true
         }
+        .task {
+            await purchaseManager.ensureProducts(for: Array(SubscriptionPlan.allCases))
+        }
+        .alert(purchaseErrorMessage ?? PurchaseError.unknown.localizedDescription,
+               isPresented: $showPurchaseError) {
+            Button(L10n.Common.ok, role: .cancel) {}
+        }
     }
     
     // MARK: - Hero
@@ -72,10 +87,16 @@ struct PaywallView: View {
         VStack(alignment: .leading, spacing: 10) {
             ForEach(PlanBenefit.allCases, id: \.self) { benefit in
                 HStack(alignment: .center, spacing: 12) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(AppFont.nippoMedium(18))
-                        .fontWeight(.bold)
-                        .foregroundStyle(Color.black, Color.white)
+                    ZStack {
+                        Circle()
+                            .fill(Color.black)
+                            .frame(width: 22, height: 22)
+                        
+                        Image(systemName: "checkmark")
+                            .font(AppFont.nippoMedium(14))
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                    }
                     
                     Text(benefit.title)
                         .font(AppFont.nippoMedium(16))
@@ -91,7 +112,7 @@ struct PaywallView: View {
     
     private var trialToggle: some View {
         HStack(spacing: 16) {
-            Text("Not sure yet? Enable free trial")
+            Text(L10n.Paywall.freeTrial)
                 .font(AppFont.nippoMedium(18))
                 .fontWeight(.semibold)
                 .foregroundColor(.black)
@@ -139,7 +160,7 @@ struct PaywallView: View {
     private var planOptions: some View {
         VStack(spacing: 16) {
             PlanOptionView(
-                title: "1 Week, $9.99",
+                title: planTitle(for: .weekly, fallback: L10n.Paywall.weeklyPlan),
                 subtitle: nil,
                 badge: nil,
                 isSelected: selectedPlan == .weekly,
@@ -148,9 +169,9 @@ struct PaywallView: View {
             .onTapGesture { selectedPlan = .weekly }
             
             PlanOptionView(
-                title: "1 Month, $19.99",
-                subtitle: "Only $4.50 / week",
-                badge: "Best value",
+                title: planTitle(for: .monthly, fallback: L10n.Paywall.monthlyPlan),
+                subtitle: L10n.Paywall.monthlySubtitle,
+                badge: L10n.Paywall.bestValueBadge,
                 isSelected: selectedPlan == .monthly,
                 selectionColor: selectedPlan == .monthly ? Color(hex: "#D7263D") : Color.black
             )
@@ -161,9 +182,7 @@ struct PaywallView: View {
     // MARK: - Subscribe Button
     
     private var subscribeButton: some View {
-        Button(action: {
-            // TODO: subscribe action
-        }) {
+        Button(action: { Task { await purchaseSelectedPlan() } }) {
             ZStack {
                 RoundedRectangle(cornerRadius: 28)
                     .fill(Color.black.opacity(0.45))
@@ -180,21 +199,28 @@ struct PaywallView: View {
                             .stroke(Color.black, lineWidth: 4)
                     )
                     .overlay(
-                        Text("Subscribe")
+                        Text(L10n.Paywall.subscribe)
                             .font(AppFont.nippoMedium(20))
                             .fontWeight(.black)
                             .foregroundColor(.white)
                             .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 3)
                     )
+                
+                if isPurchasing {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                }
             }
         }
         .buttonStyle(.plain)
+        .disabled(isPurchasing)
+        .opacity(isPurchasing ? 0.75 : 1.0)
     }
     
     // MARK: - Legal Copy
     
     private var legalFooter: some View {
-        Text("By continuing, you agree to Privacy Policy\nand Terms & Condition")
+        Text(L10n.Paywall.legal)
             .font(AppFont.nippoMedium(12))
             .foregroundColor(.black.opacity(0.7))
             .multilineTextAlignment(.center)
@@ -202,30 +228,65 @@ struct PaywallView: View {
     
     private var footnotes: some View {
         HStack(spacing: 18) {
-            Button("Restore", action: {})
+            Button(L10n.Paywall.restore, action: {})
                 .font(AppFont.nippoMedium(12))
                 .fontWeight(.semibold)
                 .foregroundColor(.black)
             
-            Button("Terms of Use", action: {})
+            Button(L10n.Paywall.terms) {
+                openURL(AppLinks.termsOfService)
+            }
                 .font(AppFont.nippoMedium(12))
                 .fontWeight(.semibold)
                 .foregroundColor(.black)
             
-            Button("Privacy Policy", action: {})
+            Button(L10n.Paywall.privacy) {
+                openURL(AppLinks.privacyPolicy)
+            }
                 .font(AppFont.nippoMedium(12))
                 .fontWeight(.semibold)
                 .foregroundColor(.black)
         }
     }
+    
+    private func planTitle(for plan: SubscriptionPlan, fallback: String) -> String {
+        let parts = splitPlanLabel(fallback)
+        let price = purchaseManager.product(for: plan)?.displayPrice ?? parts.price
+        if let price, !price.isEmpty {
+            return "\(parts.title), \(price)"
+        } else {
+            return parts.title
+        }
+    }
+    
+    private func splitPlanLabel(_ label: String) -> (title: String, price: String?) {
+        let components = label.split(separator: ",", maxSplits: 1)
+        let title = components.first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? label
+        let price = components.count > 1 ? components[1].trimmingCharacters(in: .whitespacesAndNewlines) : nil
+        return (title, price)
+    }
+    
+    private func purchaseSelectedPlan() async {
+        if isPurchasing { return }
+        isPurchasing = true
+        defer { isPurchasing = false }
+        
+        do {
+            _ = try await purchaseManager.purchase(plan: selectedPlan)
+            try await usageManager.applySubscription(selectedPlan)
+            await MainActor.run {
+                dismiss()
+            }
+        } catch PurchaseError.userCancelled {
+            // no-op
+        } catch {
+            purchaseErrorMessage = error.localizedDescription
+            showPurchaseError = true
+        }
+    }
 }
 
 // MARK: - Models
-
-private enum Plan: String {
-    case weekly
-    case monthly
-}
 
 private enum PlanBenefit: CaseIterable {
     case fasterResults
@@ -235,10 +296,10 @@ private enum PlanBenefit: CaseIterable {
     
     var title: String {
         switch self {
-        case .fasterResults: return "Faster Results"
-        case .unlockPremium: return "Unlock premium features"
-        case .unlimitedMemes: return "Unlimited Meme Generations"
-        case .nonstopChaos: return "Non-Stop Chaos At Your Fingertips"
+        case .fasterResults: return L10n.Paywall.benefitFasterResults
+        case .unlockPremium: return L10n.Paywall.benefitUnlockPremium
+        case .unlimitedMemes: return L10n.Paywall.benefitUnlimitedMemes
+        case .nonstopChaos: return L10n.Paywall.benefitNonstopChaos
         }
     }
 }
@@ -326,6 +387,9 @@ struct PaywallView_Previews: PreviewProvider {
     static var previews: some View {
         PaywallView()
             .previewDevice("iPhone 14 Pro")
+            .environmentObject(LocalizationManager.shared)
+            .environmentObject(PurchaseManager.shared)
+            .environmentObject(UsageManager())
     }
 }
 

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct Intro2View: View {
+    @EnvironmentObject private var localizationManager: LocalizationManager
     var onNext: () -> Void = {}
     
     @State private var animateSticker = false   // ✅ animation trigger
@@ -53,7 +54,7 @@ struct Intro2View: View {
                 // ✅ Title with same heavy shadow as Intro1
                 ZStack {
                     // Shadow layer (black)
-                    Text("Create your own rot!")
+                    Text(L10n.Intro.Two.title)
                         .font(AppFont.nippoMedium(28))
                         .fontWeight(.black)
                         .foregroundColor(.black)
@@ -61,7 +62,7 @@ struct Intro2View: View {
                         .offset(x: 3, y: 4) // bold shadow
                     
                     // Main white text
-                    Text("Create your own rot!")
+                    Text(L10n.Intro.Two.title)
                         .font(AppFont.nippoMedium(28))
                         .fontWeight(.black)
                         .foregroundColor(.white)
@@ -83,7 +84,7 @@ struct Intro2View: View {
                             .scaledToFit()
                             .frame(height: 60)
 
-                        Text("Next")
+                        Text(L10n.Intro.next)
                             .font(AppFont.nippoMedium(20))
                             .fontWeight(.bold)
                             .foregroundColor(.white)
@@ -105,8 +106,10 @@ struct Intro2View_Previews: PreviewProvider {
         Group {
             Intro2View()
                 .previewDevice("iPhone SE (3rd generation)")
+                .environmentObject(LocalizationManager.shared)
             Intro2View()
                 .previewDevice("iPhone 14 Pro Max")
+                .environmentObject(LocalizationManager.shared)
         }
     }
 }

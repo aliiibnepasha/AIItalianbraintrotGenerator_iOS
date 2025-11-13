@@ -2,6 +2,7 @@ import SwiftUI
 import UIKit
 
 struct ImageDetailView: View {
+    @EnvironmentObject private var localizationManager: LocalizationManager
     @EnvironmentObject private var contentStore: GeneratedContentStore
     
     let image: GeneratedImage
@@ -118,7 +119,7 @@ struct ImageDetailView: View {
                         HStack(spacing: 8) {
                             Image(systemName: contentStore.isFavorite(image) ? "heart.fill" : "heart")
                                 .foregroundColor(.black)
-                            Text(contentStore.isFavorite(image) ? "Favorited" : "Favorite")
+                            Text(contentStore.isFavorite(image) ? L10n.Common.favorited : L10n.Common.favorite)
                                 .font(AppFont.nippoMedium(18))
                                 .fontWeight(.semibold)
                                 .foregroundColor(.black)
@@ -153,7 +154,7 @@ struct ImageDetailView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "square.and.arrow.up")
                                 .foregroundColor(.black)
-                            Text("Share")
+                            Text(L10n.Common.share)
                                 .font(AppFont.nippoMedium(18))
                                 .fontWeight(.semibold)
                                 .foregroundColor(.black)
@@ -186,7 +187,7 @@ struct ImageDetailView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "trash")
                                 .foregroundColor(.white)
-                            Text("Delete")
+                            Text(L10n.Common.delete)
                                 .font(AppFont.nippoMedium(18))
                                 .fontWeight(.semibold)
                                 .foregroundColor(.white)

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SplashView: View {
+    @EnvironmentObject private var localizationManager: LocalizationManager
     var onFinished: () -> Void = {}
     
     @State private var animateText: Bool = false
@@ -15,7 +16,7 @@ struct SplashView: View {
                 .ignoresSafeArea()
             
             // ✅ Animated Text
-            Text("ITALIAN\nBRAINROT")
+            Text(L10n.Splash.title)
                 .font(AppFont.nippoMedium(48))
                 .fontWeight(.black)
                 .multilineTextAlignment(.center)
@@ -38,6 +39,7 @@ struct SplashView_Previews: PreviewProvider {
     static var previews: some View {
         SplashView()
             .previewDevice("iPhone 14 Pro")
+            .environmentObject(LocalizationManager.shared)
     }
 }
 

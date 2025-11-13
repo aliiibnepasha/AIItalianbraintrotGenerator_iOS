@@ -2,26 +2,22 @@ import SwiftUI
 
 struct LanguageSelectionView: View {
     
-    @Binding var selectedLanguage: String
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @Binding var selectedLanguageCode: String
     @State private var pendingSelection: String
     
     @Environment(\.dismiss) private var dismiss
     
-    private let languages: [String] = [
-        "Arabic",
-        "Chinese",
-        "Italian",
-        "English",
-        "Korean",
-        "Japanese",
-        "Portuguese",
-        "German",
-        "Russian"
+    private let languageCodes: [String] = [
+        "en",
+        "ko",
+        "it",
+        "ja"
     ]
     
-    init(selectedLanguage: Binding<String>) {
-        self._selectedLanguage = selectedLanguage
-        self._pendingSelection = State(initialValue: selectedLanguage.wrappedValue)
+    init(selectedLanguageCode: Binding<String>) {
+        self._selectedLanguageCode = selectedLanguageCode
+        self._pendingSelection = State(initialValue: selectedLanguageCode.wrappedValue)
     }
     
     var body: some View {
@@ -35,11 +31,11 @@ struct LanguageSelectionView: View {
                 
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 14) {
-                        ForEach(languages, id: \.self) { language in
-                            LanguageRow(title: language,
-                                        isSelected: language == pendingSelection)
+                        ForEach(languageCodes, id: \.self) { code in
+                            LanguageRow(title: L10n.Language.displayName(for: code),
+                                        isSelected: code == pendingSelection)
                             .onTapGesture {
-                                pendingSelection = language
+                                pendingSelection = code
                             }
                         }
                     }
@@ -61,8 +57,8 @@ struct LanguageSelectionView: View {
             
             Spacer()
             
-            Button("Done") {
-                selectedLanguage = pendingSelection
+            Button(L10n.Language.done) {
+                selectedLanguageCode = pendingSelection
                 dismiss()
             }
             .font(AppFont.nippoMedium(16))
@@ -70,7 +66,7 @@ struct LanguageSelectionView: View {
             .foregroundColor(.black)
         }
         .overlay(
-            Text("Language")
+            Text(L10n.Language.title)
                 .font(AppFont.nippoMedium(32))
                 .fontWeight(.black)
                 .foregroundColor(.black)
@@ -158,7 +154,8 @@ private struct BackButton: View {
 
 struct LanguageSelectionView_Previews: PreviewProvider {
     static var previews: some View {
-        LanguageSelectionView(selectedLanguage: .constant("English"))
+        LanguageSelectionView(selectedLanguageCode: .constant("en"))
+            .environmentObject(LocalizationManager.shared)
     }
 }
 

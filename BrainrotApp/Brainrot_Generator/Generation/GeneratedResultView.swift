@@ -1,5 +1,6 @@
 import SwiftUI
 struct GeneratedResultView: View {
+    @EnvironmentObject private var localizationManager: LocalizationManager
     @EnvironmentObject private var contentStore: GeneratedContentStore
     
     let image: GeneratedImage
@@ -50,7 +51,7 @@ struct GeneratedResultView: View {
             Spacer().frame(width: 40)
         }
         .overlay(
-            Text("Ai Brainrot")
+            Text(L10n.Result.title)
                 .font(AppFont.nippoMedium(28))
                 .fontWeight(.black)
                 .foregroundColor(.black)
@@ -135,7 +136,7 @@ struct GeneratedResultView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "square.and.arrow.up")
                                 .foregroundColor(.black)
-                            Text("Share")
+                            Text(L10n.Common.share)
                                 .font(AppFont.nippoMedium(18))
                                 .fontWeight(.semibold)
                                 .foregroundColor(.black)
@@ -167,7 +168,7 @@ struct GeneratedResultView: View {
                         HStack(spacing: 8) {
                             Image(systemName: contentStore.isFavorite(image) ? "heart.fill" : "heart")
                                 .foregroundColor(.black)
-                            Text(contentStore.isFavorite(image) ? "Favorited" : "Favorite")
+                            Text(contentStore.isFavorite(image) ? L10n.Common.favorited : L10n.Common.favorite)
                                 .font(AppFont.nippoMedium(18))
                                 .fontWeight(.semibold)
                                 .foregroundColor(.black)
@@ -196,7 +197,7 @@ struct GeneratedResultView: View {
                             .stroke(Color.black, lineWidth: 4)
                     )
                     .overlay(
-                        Text("Generate Again")
+                        Text(L10n.Common.generateAgain)
                             .font(AppFont.nippoMedium(18))
                             .fontWeight(.bold)
                             .foregroundColor(.white)
@@ -220,6 +221,7 @@ struct GeneratedResultView_Previews: PreviewProvider {
             onGenerateAgain: {}
         )
         .environmentObject(store)
+        .environmentObject(LocalizationManager.shared)
     }
 }
 

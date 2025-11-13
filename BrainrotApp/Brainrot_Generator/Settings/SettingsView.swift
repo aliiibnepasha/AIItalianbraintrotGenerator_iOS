@@ -3,18 +3,18 @@ import SwiftUI
 struct SettingsView: View {
     
     @EnvironmentObject private var contentStore: GeneratedContentStore
+    @EnvironmentObject private var localizationManager: LocalizationManager
+    @Environment(\.openURL) private var openURL
     
-    @State private var selectedLanguage: String = "English"
     @State private var showLanguagePicker: Bool = false
     @State private var showPaywall: Bool = false
     @State private var showGallery: Bool = false
     
-    private let buttonTitles: [String] = [
-        "Language",
-        "Terms Of Service",
-        "Privacy Policy",
-        "Community Guidelines",
-        "Creations"
+    private let settingsOptions: [SettingsOption] = [
+        .init(kind: .language),
+        .init(kind: .termsOfService),
+        .init(kind: .privacyPolicy),
+        .init(kind: .creations)
     ]
     
     var body: some View {
@@ -27,7 +27,7 @@ struct SettingsView: View {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 20) {
                         
-                        Text("Setting")
+                        Text(L10n.Settings.title)
                             .font(AppFont.nippoMedium(32))
                             .fontWeight(.black)
                             .foregroundColor(.black)
@@ -40,10 +40,12 @@ struct SettingsView: View {
                         }
                         
                         VStack(spacing: 14) {
-                            ForEach(buttonTitles, id: \.self) { title in
-                                SettingsButton(title: title,
-                                               description: title == "Language" ? selectedLanguage : nil,
-                                               action: buttonAction(for: title))
+                            ForEach(settingsOptions) { option in
+                                SettingsButton(
+                                    title: option.title,
+                                    description: option.kind == .language ? L10n.Language.displayName(for: localizationManager.languageCode) : nil,
+                                    action: buttonAction(for: option.kind)
+                                )
                             }
                         }
                         .padding(.top, 4)
@@ -55,8 +57,12 @@ struct SettingsView: View {
                 }
             }
             .navigationDestination(isPresented: $showLanguagePicker) {
-                LanguageSelectionView(selectedLanguage: $selectedLanguage)
+                LanguageSelectionView(selectedLanguageCode: Binding(
+                    get: { localizationManager.languageCode },
+                    set: { localizationManager.setLanguage($0) }
+                ))
                     .environmentObject(contentStore)
+                    .environmentObject(localizationManager)
             }
             .navigationDestination(isPresented: $showGallery) {
                 GalleryView()
@@ -69,11 +75,15 @@ struct SettingsView: View {
         }
     }
     
-    private func buttonAction(for title: String) -> (() -> Void)? {
-        switch title {
-        case "Language":
+    private func buttonAction(for kind: SettingsOption.Kind) -> (() -> Void)? {
+        switch kind {
+        case .language:
             return { showLanguagePicker = true }
-        case "Creations":
+        case .termsOfService:
+            return { openURL(AppLinks.termsOfService) }
+        case .privacyPolicy:
+            return { openURL(AppLinks.privacyPolicy) }
+        case .creations:
             return { showGallery = true }
         default:
             return nil
@@ -81,9 +91,33 @@ struct SettingsView: View {
     }
 }
 
+private struct SettingsOption: Identifiable {
+    enum Kind: Hashable {
+        case language
+        case termsOfService
+        case privacyPolicy
+        case creations
+    }
+    
+    let kind: Kind
+    var id: Kind { kind }
+    
+    var title: String {
+        switch kind {
+        case .language: return L10n.Settings.language
+        case .termsOfService: return L10n.Settings.termsOfService
+        case .privacyPolicy: return L10n.Common.privacyPolicy
+        case .creations: return L10n.Settings.creations
+        }
+    }
+}
+
 // MARK: - Components
 
 private struct PremiumBanner: View {
+    @State private var pulse = false
+    @State private var float = false
+    
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 26)
@@ -104,34 +138,56 @@ private struct PremiumBanner: View {
                     HStack(spacing: 18) {
                         ZStack {
                             Circle()
-                                .fill(Color(hex: "#F2C94C"))
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            Color(hex: "#F2C94C"),
+                                            Color(hex: "#F2994A")
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
                                 .overlay(
                                     Circle()
                                         .stroke(Color.black, lineWidth: 4)
                                 )
                                 .frame(width: 56, height: 56)
+                                .scaleEffect(pulse ? 1.08 : 0.95)
                             
                             Image(systemName: "crown.fill")
                                 .font(AppFont.nippoMedium(28))
                                 .fontWeight(.bold)
                                 .foregroundColor(.black)
-                                .offset(y: -2)
+                                .offset(y: pulse ? -4 : -2)
+                                .shadow(color: Color.black.opacity(0.45), radius: 4, x: 0, y: 2)
                         }
                         
-                        Text("Get Premium")
+                        Text(L10n.Common.getPremium)
                             .font(AppFont.nippoMedium(20))
                             .fontWeight(.black)
                             .foregroundColor(.white)
                             .shadow(color: .black.opacity(0.45), radius: 0, x: 0, y: 3)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .opacity(pulse ? 1 : 0.92)
                         
                         Image("shark_1")
                             .resizable()
                             .scaledToFit()
                             .frame(height: 82)
+                            .rotationEffect(.degrees(float ? 4 : -3))
+                            .offset(y: float ? -4 : 4)
                     }
                     .padding(.horizontal, 20)
                 )
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
+                pulse = true
+            }
+            withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
+                float = true
+            }
         }
     }
 }
@@ -200,6 +256,9 @@ struct SettingsView_Previews: PreviewProvider {
         SettingsView()
             .background(Theme.background)
             .environmentObject(GeneratedContentStore())
+            .environmentObject(LocalizationManager.shared)
+            .environmentObject(PurchaseManager.shared)
+            .environmentObject(UsageManager())
     }
 }
 

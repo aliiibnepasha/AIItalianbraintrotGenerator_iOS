@@ -3,6 +3,7 @@ import UIKit
 
 struct GalleryView: View {
     
+    @EnvironmentObject private var localizationManager: LocalizationManager
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var contentStore: GeneratedContentStore
     @State private var detailImage: GeneratedImage?
@@ -23,10 +24,10 @@ struct GalleryView: View {
                 
                 if contentStore.gallery.isEmpty {
                     VStack(spacing: 12) {
-                        Text("Your creations will appear here")
+                        Text(L10n.Gallery.emptyTitle)
                             .font(AppFont.nippoMedium(18))
                             .foregroundColor(.black)
-                        Text("Generate an image to see it in your gallery.")
+                        Text(L10n.Gallery.emptySubtitle)
                             .font(AppFont.nippoMedium(14))
                             .foregroundColor(.black.opacity(0.7))
                     }
@@ -69,7 +70,7 @@ struct GalleryView: View {
             
             Spacer()
             
-            Text("Gallery")
+            Text(L10n.Gallery.title)
                 .font(AppFont.nippoMedium(34))
                 .fontWeight(.black)
                 .foregroundColor(.black)
@@ -113,6 +114,7 @@ struct GalleryView_Previews: PreviewProvider {
         GalleryView()
             .previewDevice("iPhone 14 Pro")
             .environmentObject(GeneratedContentStore())
+            .environmentObject(LocalizationManager.shared)
     }
 }
 

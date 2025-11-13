@@ -1,0 +1,110 @@
+/* Localizable.strings (Japanese) */
+
+"app_name" = "Brainrot Generator";
+
+"common.ok" = "OK";
+"common.share" = "共有";
+"common.delete" = "削除";
+"common.favorite" = "お気に入り";
+"common.favorited" = "お気に入り済み";
+"common.generate" = "生成";
+"common.generate_again" = "再生成";
+"common.language" = "言語";
+"common.done" = "完了";
+"common.restore" = "復元";
+"common.terms_of_use" = "利用規約";
+"common.privacy_policy" = "プライバシーポリシー";
+"common.get_premium" = "プレミアムを取得";
+"common.home" = "ホーム";
+"common.setting" = "設定";
+
+"splash.title" = "イタリアン\nブレインロット";
+
+"intro.next" = "次へ";
+"intro1.title" = "イタリアン・ブレインロットの\n世界へ飛び込もう！";
+"intro2.title" = "自分だけのブレインロットを作ろう！";
+"intro3.title" = "シェアして、ぶち壊して、バズらせよう！";
+"intro3.get_started" = "始める";
+
+"home.header_title" = "今日は\n誰になる？";
+"home.placeholder" = "ここにキャラクター名を入力";
+"home.last_generated" = "最新生成";
+"home.last_generated_empty" = "ここに表示するには最初のキャラクターを生成してください。";
+"home.favorites" = "お気に入り";
+"home.favorites_empty" = "ハートをタップするとお気に入りに追加されます。";
+"home.alert.missing_keywords" = "キャラクター名を入力してください";
+"home.alert.generation_failed" = "生成に失敗しました";
+"home.tab.home" = "ホーム";
+"home.tab.settings" = "設定";
+"home.quota_label" = "画像";
+"home.quota_loading" = "読み込み中...";
+
+"generate.header_title" = "カオスを\nカスタマイズ";
+"generate.section.gender" = "性別 / ムード";
+"generate.section.mood" = "ムードセレクター";
+"generate.section.accent" = "アクセント強度";
+"generate.section.outfit" = "衣装スタイル";
+"generate.section.aspect" = "アスペクト比";
+"generate.gender.male" = "男性";
+"generate.gender.female" = "女性";
+"generate.gender.mixed" = "ミックス";
+"generate.gender.chaos" = "カオス";
+"generate.mood.romantic" = "ロマンチック";
+"generate.mood.mafia" = "マフィアドラマ";
+"generate.mood.cafe" = "カフェゴシップ";
+"generate.mood.tiktok" = "TikTokロット";
+"generate.outfit.vintage" = "ヴィンテージ";
+"generate.outfit.modern" = "モダン";
+"generate.outfit.meme" = "ミームコア";
+"generate.slider.low" = "控えめ";
+"generate.slider.high" = "ぶっ飛び";
+"generate.default_title" = "カスタムブレインロットキャラクター";
+"generate.default_character" = "想像上のペルソナ";
+"generate.summary_format" = "%1$@ • %2$@ • %3$@";
+
+"generating.status" = "生成中...";
+
+"result.title" = "AI ブレインロット";
+
+"gallery.title" = "ギャラリー";
+"gallery.empty_title" = "あなたの作品がここに表示されます";
+"gallery.empty_subtitle" = "ギャラリーに表示するには画像を生成してください。";
+
+"settings.title" = "設定";
+"settings.language" = "言語";
+"settings.terms_of_service" = "利用規約";
+"settings.community_guidelines" = "コミュニティガイドライン";
+"settings.creations" = "作品";
+
+"language.title" = "言語";
+"language.done" = "完了";
+"language.name.english" = "英語";
+"language.name.korean" = "韓国語";
+"language.name.italian" = "イタリア語";
+"language.name.japanese" = "日本語";
+
+"paywall.hero_title" = "ブレインロット\nプレミアムを解放しよう";
+"paywall.benefit.faster_results" = "より速い結果";
+"paywall.benefit.unlock_premium" = "プレミアム機能を解放";
+"paywall.benefit.unlimited_memes" = "無制限のミーム生成";
+"paywall.benefit.nonstop_chaos" = "指先で止まらないカオス";
+"paywall.free_trial" = "まだ迷ってる？無料トライアルをオン";
+"paywall.plan.weekly" = "1週間、$9.99";
+"paywall.plan.monthly" = "1か月、$19.99";
+"paywall.plan.monthly_subtitle" = "週あたりわずか$4.50";
+"paywall.plan.badge" = "最もお得";
+"paywall.subscribe" = "購読する";
+"paywall.legal" = "続行するとプライバシーポリシーと\n利用規約に同意したことになります。";
+"paywall.restore" = "復元";
+"paywall.terms" = "利用規約";
+"paywall.privacy" = "プライバシーポリシー";
+
+"service_error.unexpected_response" = "画像サービスが予期しない応答を返しました。";
+"service_error.status_with_message" = "画像サービスのエラー（%1$@）: %2$@";
+"service_error.missing_url" = "サービスから画像URLが提供されませんでした。";
+"service_error.invalid_image_data" = "サービスから返された画像データが無効です。";
+"service_error.download_failed" = "生成された画像をダウンロードできません。";
+"service_error.unknown_error" = "不明なエラー";
+"service_error.no_response" = "レスポンス本文がありません";
+
+

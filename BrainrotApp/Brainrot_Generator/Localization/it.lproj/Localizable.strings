@@ -1,0 +1,110 @@
+/* Localizable.strings (Italian) */
+
+"app_name" = "Brainrot Generator";
+
+"common.ok" = "OK";
+"common.share" = "Condividi";
+"common.delete" = "Elimina";
+"common.favorite" = "Preferito";
+"common.favorited" = "Nei preferiti";
+"common.generate" = "Genera";
+"common.generate_again" = "Genera di nuovo";
+"common.language" = "Lingua";
+"common.done" = "Fine";
+"common.restore" = "Ripristina";
+"common.terms_of_use" = "Termini d'uso";
+"common.privacy_policy" = "Informativa sulla privacy";
+"common.get_premium" = "Ottieni Premium";
+"common.home" = "Home";
+"common.setting" = "Impostazioni";
+
+"splash.title" = "ITALIAN\nBRAINROT";
+
+"intro.next" = "Avanti";
+"intro1.title" = "Entra nel mondo di\nItalian Brainrot!";
+"intro2.title" = "Crea il tuo brainrot!";
+"intro3.title" = "Condividi, distruggi, diventa virale!";
+"intro3.get_started" = "Inizia";
+
+"home.header_title" = "Chi sarai\noggi?";
+"home.placeholder" = "Inserisci qui il nome del personaggio";
+"home.last_generated" = "Ultima creazione";
+"home.last_generated_empty" = "Crea il tuo primo personaggio per vederlo qui.";
+"home.favorites" = "Preferiti";
+"home.favorites_empty" = "Tocca il cuore su una creazione per aggiungerla ai preferiti.";
+"home.alert.missing_keywords" = "Inserisci il nome del personaggio";
+"home.alert.generation_failed" = "Generazione non riuscita";
+"home.tab.home" = "Home";
+"home.tab.settings" = "Impostazioni";
+"home.quota_label" = "Immagini";
+"home.quota_loading" = "Caricamento...";
+
+"generate.header_title" = "Personalizza\nil tuo caos";
+"generate.section.gender" = "Genere / Mood";
+"generate.section.mood" = "Selettore mood";
+"generate.section.accent" = "Intensità accento";
+"generate.section.outfit" = "Stile outfit";
+"generate.section.aspect" = "Formato";
+"generate.gender.male" = "Maschile";
+"generate.gender.female" = "Femminile";
+"generate.gender.mixed" = "Misto";
+"generate.gender.chaos" = "Caos";
+"generate.mood.romantic" = "Romantico";
+"generate.mood.mafia" = "Dramma mafioso";
+"generate.mood.cafe" = "Gossip da bar";
+"generate.mood.tiktok" = "Tiktok-rot";
+"generate.outfit.vintage" = "Vintage";
+"generate.outfit.modern" = "Moderno";
+"generate.outfit.meme" = "Meme-core";
+"generate.slider.low" = "Leggero";
+"generate.slider.high" = "Esagerato";
+"generate.default_title" = "Personaggio Brainrot personalizzato";
+"generate.default_character" = "una persona immaginaria";
+"generate.summary_format" = "%1$@ • %2$@ • %3$@";
+
+"generating.status" = "Generazione in corso...";
+
+"result.title" = "Ai Brainrot";
+
+"gallery.title" = "Galleria";
+"gallery.empty_title" = "Le tue creazioni appariranno qui";
+"gallery.empty_subtitle" = "Genera un'immagine per vederla nella galleria.";
+
+"settings.title" = "Impostazioni";
+"settings.language" = "Lingua";
+"settings.terms_of_service" = "Termini del servizio";
+"settings.community_guidelines" = "Linee guida della community";
+"settings.creations" = "Creazioni";
+
+"language.title" = "Lingua";
+"language.done" = "Fine";
+"language.name.english" = "Inglese";
+"language.name.korean" = "Coreano";
+"language.name.italian" = "Italiano";
+"language.name.japanese" = "Giapponese";
+
+"paywall.hero_title" = "Sblocca Brainrot\nPremium";
+"paywall.benefit.faster_results" = "Risultati più rapidi";
+"paywall.benefit.unlock_premium" = "Sblocca funzioni premium";
+"paywall.benefit.unlimited_memes" = "Generazioni di meme illimitate";
+"paywall.benefit.nonstop_chaos" = "Caos senza sosta a portata di mano";
+"paywall.free_trial" = "Non sei sicuro? Attiva la prova gratuita";
+"paywall.plan.weekly" = "1 settimana, $9.99";
+"paywall.plan.monthly" = "1 mese, $19.99";
+"paywall.plan.monthly_subtitle" = "Solo $4.50 a settimana";
+"paywall.plan.badge" = "Miglior offerta";
+"paywall.subscribe" = "Abbonati";
+"paywall.legal" = "Continuando accetti l'Informativa sulla privacy\ne i Termini e condizioni";
+"paywall.restore" = "Ripristina";
+"paywall.terms" = "Termini d'uso";
+"paywall.privacy" = "Informativa sulla privacy";
+
+"service_error.unexpected_response" = "Il servizio immagini ha restituito una risposta imprevista.";
+"service_error.status_with_message" = "Errore del servizio immagini (%1$@): %2$@";
+"service_error.missing_url" = "Il servizio non ha fornito alcun URL dell'immagine.";
+"service_error.invalid_image_data" = "I dati dell'immagine restituiti dal servizio non sono validi.";
+"service_error.download_failed" = "Impossibile scaricare l'immagine generata.";
+"service_error.unknown_error" = "Errore sconosciuto";
+"service_error.no_response" = "Nessun contenuto nella risposta";
+
+

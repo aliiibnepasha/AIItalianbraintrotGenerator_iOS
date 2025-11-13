@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct GeneratingView: View {
+    @EnvironmentObject private var localizationManager: LocalizationManager
     // MARK: - Animation State
     @State private var backRotation: Double = 0
     @State private var middleRotation: Double = 0
@@ -75,7 +76,7 @@ struct GeneratingView: View {
                         .stroke(Color.black, lineWidth: 4)
                 )
                 .overlay(
-                    Text("Generating.....")
+                    Text(L10n.Generating.status)
                         .font(AppFont.nippoMedium(20))
                         .fontWeight(.black)
                         .foregroundColor(.white)
@@ -119,6 +120,7 @@ struct GeneratingView_Previews: PreviewProvider {
     static var previews: some View {
         GeneratingView()
             .previewDevice("iPhone 14 Pro")
+            .environmentObject(LocalizationManager.shared)
     }
 }
 

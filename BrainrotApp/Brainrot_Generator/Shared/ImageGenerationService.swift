@@ -11,15 +11,15 @@ enum ImageGenerationError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
-            return "The image service returned an unexpected response."
+            return L10n.ServiceError.unexpectedResponse
         case .serverError(let statusCode, let message):
-            return "Image service error (\(statusCode)): \(message)"
+            return L10n.ServiceError.statusWithMessage("\(statusCode)", message)
         case .missingImageURL:
-            return "No image URL was provided by the service."
+            return L10n.ServiceError.missingURL
         case .invalidImageData:
-            return "The image data returned by the service was invalid."
+            return L10n.ServiceError.invalidImageData
         case .downloadFailed:
-            return "Unable to download the generated image."
+            return L10n.ServiceError.downloadFailed
         }
     }
 }
@@ -54,7 +54,7 @@ final class ImageGenerationService {
         }
         
         guard (200...299).contains(httpResponse.statusCode) else {
-            let message = String(data: data, encoding: .utf8) ?? "Unknown error"
+            let message = String(data: data, encoding: .utf8) ?? L10n.ServiceError.unknownError
             throw ImageGenerationError.serverError(statusCode: httpResponse.statusCode, message: message)
         }
         
@@ -73,7 +73,7 @@ final class ImageGenerationService {
             return uiImage
         }
         
-        let rawResponse = String(data: data, encoding: .utf8) ?? "No response body"
+        let rawResponse = String(data: data, encoding: .utf8) ?? L10n.ServiceError.noResponseBody
         throw ImageGenerationError.missingImageURL(rawResponse: rawResponse)
     }
     

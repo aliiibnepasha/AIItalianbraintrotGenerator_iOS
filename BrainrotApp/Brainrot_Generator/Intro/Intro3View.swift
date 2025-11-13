@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct Intro3View: View {
+    @EnvironmentObject private var localizationManager: LocalizationManager
     var onGetStarted: () -> Void = {}
     
     @State private var animateSticker = false      // ✅ animation trigger
@@ -50,14 +51,14 @@ struct Intro3View: View {
                 
                 // ✅ Title with thick cartoon shadow
                 ZStack {
-                    Text("Share,Break, Go Viral!")
+                    Text(L10n.Intro.Three.title)
                             .font(AppFont.nippoMedium(28))
                             .fontWeight(.black)
                         .foregroundColor(.black)
                         .multilineTextAlignment(.center)
                         .offset(x: 3, y: 4)
                     
-                    Text("Share,Break, Go Viral!")
+                    Text(L10n.Intro.Three.title)
                             .font(AppFont.nippoMedium(28))
                             .fontWeight(.black)
                         .foregroundColor(.white)
@@ -77,7 +78,7 @@ struct Intro3View: View {
                             .scaledToFit()
                             .frame(height: 60)
                         
-                        Text("Get Started")
+                        Text(L10n.Intro.Three.getStarted)
                                 .font(AppFont.nippoMedium(20))
                                 .fontWeight(.bold)
                             .foregroundColor(.white)
@@ -98,6 +99,7 @@ struct Intro3View_Previews: PreviewProvider {
     static var previews: some View {
         Intro3View()
             .previewDevice("iPhone 14 Pro Max")
+            .environmentObject(LocalizationManager.shared)
     }
 }
 

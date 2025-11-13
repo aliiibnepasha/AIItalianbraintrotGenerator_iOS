@@ -71,7 +71,7 @@ final class GeneratedContentStore: ObservableObject {
         let fileURL = imagesDirectory.appendingPathComponent(fileName)
         
         guard let data = uiImage.pngData() else {
-            throw NSError(domain: "GeneratedContentStore", code: 0, userInfo: [NSLocalizedDescriptionKey: "Unable to encode image data"])
+            throw NSError(domain: "GeneratedContentStore", code: 0, userInfo: [NSLocalizedDescriptionKey: L10n.ServiceError.invalidImageData])
         }
         
         try data.write(to: fileURL, options: .atomic)

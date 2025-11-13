@@ -19,9 +19,13 @@ private enum AppFlowStep {
 @main
 struct Brainrot_GeneratorApp: App {
     @State private var step: AppFlowStep = .splash
+    @StateObject private var localizationManager = LocalizationManager.shared
+    @StateObject private var purchaseManager = PurchaseManager.shared
+    @StateObject private var usageManager = UsageManager()
     
     init() {
         FirebaseApp.configure()
+        PurchaseManager.shared.listenForTransactions()
     }
     
     var body: some Scene {
@@ -40,6 +44,10 @@ struct Brainrot_GeneratorApp: App {
                     HomeView()
                 }
             }
+            .environmentObject(localizationManager)
+            .environment(\.locale, localizationManager.locale)
+            .environmentObject(purchaseManager)
+            .environmentObject(usageManager)
         }
     }
 }

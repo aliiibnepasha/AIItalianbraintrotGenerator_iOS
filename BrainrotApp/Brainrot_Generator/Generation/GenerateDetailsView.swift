@@ -1,7 +1,13 @@
 import SwiftUI
 
+struct SelectionOption: Hashable {
+    let displayTitle: String
+    let promptValue: String
+}
+
 // MARK: - Screen
 struct GenerateDetailsView: View {
+    @EnvironmentObject private var localizationManager: LocalizationManager
     let keywords: [String]
     let onGenerate: (GenerationRequest) -> Void
     // Selections (all single-select, independent)
@@ -12,12 +18,22 @@ struct GenerateDetailsView: View {
     @State private var selectedAspect: Aspect = .oneOne
 
     // Display data
-    private let genderItems = ["Male", "Female", "Mixed", "Chaos"]
-    private let moodItems   = ["Romantic", "Mafia Drama", "Cafe Gossip", "Tiktok-Rot"]
+    private let genderOptions: [SelectionOption] = [
+        .init(displayTitle: L10n.GenerateDetails.genderMale, promptValue: "Male"),
+        .init(displayTitle: L10n.GenerateDetails.genderFemale, promptValue: "Female"),
+        .init(displayTitle: L10n.GenerateDetails.genderMixed, promptValue: "Mixed"),
+        .init(displayTitle: L10n.GenerateDetails.genderChaos, promptValue: "Chaos")
+    ]
+    private let moodOptions: [SelectionOption] = [
+        .init(displayTitle: L10n.GenerateDetails.moodRomantic, promptValue: "Romantic"),
+        .init(displayTitle: L10n.GenerateDetails.moodMafia, promptValue: "Mafia Drama"),
+        .init(displayTitle: L10n.GenerateDetails.moodCafe, promptValue: "Cafe Gossip"),
+        .init(displayTitle: L10n.GenerateDetails.moodTiktok, promptValue: "Tiktok-Rot")
+    ]
     private let outfitItems: [OutfitItem] = [
-        .init(image: "outfit_vintage", title: "Vintage"),
-        .init(image: "outfit_modern", title: "Modern"),
-        .init(image: "outfit_meme", title: "Meme-Core")
+        .init(image: "outfit_vintage", displayTitle: L10n.GenerateDetails.outfitVintage, promptValue: "Vintage"),
+        .init(image: "outfit_modern", displayTitle: L10n.GenerateDetails.outfitModern, promptValue: "Modern"),
+        .init(image: "outfit_meme", displayTitle: L10n.GenerateDetails.outfitMeme, promptValue: "Meme-Core")
     ]
 
     @Environment(\.dismiss) private var dismiss
@@ -42,7 +58,7 @@ struct GenerateDetailsView: View {
                         BackButton { dismiss() }
                             .alignmentGuide(.top) { d in d[.top] - 4 }
 
-                        SwiftUI.Text("Customize\nYour Chaos")
+                        SwiftUI.Text(L10n.GenerateDetails.headerTitle)
                             .font(AppFont.nippoMedium(32))
                             .fontWeight(.black)
                             .foregroundColor(.black)
@@ -56,27 +72,27 @@ struct GenerateDetailsView: View {
                     .padding(.top, 6)
 
                     // Gender / Vibe (single select)
-                    SectionLabel("Gender / Vibe")
+                    SectionLabel(L10n.GenerateDetails.sectionGender)
                     Pill2x2Section(
-                        titles: genderItems,
+                        options: genderOptions,
                         selectedIndex: $selectedGenderIndex,
                         selectionColor: pinkColor
                     )
 
                     // Mood Selector (single select)
-                    SectionLabel("Mood Selector")
+                    SectionLabel(L10n.GenerateDetails.sectionMood)
                     Pill2x2Section(
-                        titles: moodItems,
+                        options: moodOptions,
                         selectedIndex: $selectedMoodIndex,
                         selectionColor: pinkColor
                     )
 
                     // Accent Strength
-                    SectionLabel("Accent Strength")
+                    SectionLabel(L10n.GenerateDetails.sectionAccent)
                     AccentSlider(value: $accentStrength)
 
                     // Outfit Style (horizontal cards, single select)
-                    SectionLabel("Outfit Style")
+                    SectionLabel(L10n.GenerateDetails.sectionOutfit)
                     OutfitRow(
                         items: outfitItems,
                         selectedIndex: $selectedOutfit,
@@ -85,17 +101,17 @@ struct GenerateDetailsView: View {
                     )
 
                     // Aspect Ratio (up to 16:9)
-                    SectionLabel("Aspect Ratio")
+                    SectionLabel(L10n.GenerateDetails.sectionAspect)
                     AspectRow(selected: $selectedAspect, selectionColor: pinkColor)
 
                     // Generate Button
-                    GenerateButton(title: "Generate") {
+                    GenerateButton(title: L10n.Common.generate) {
                         let request = GenerationRequest(
                             keywords: keywords,
-                            gender: genderItems[selectedGenderIndex],
-                            mood: moodItems[selectedMoodIndex],
+                            gender: genderOptions[selectedGenderIndex],
+                            mood: moodOptions[selectedMoodIndex],
                             accentStrength: accentStrength,
-                            outfit: outfitItems[selectedOutfit].title,
+                            outfit: outfitItems[selectedOutfit].selection,
                             aspect: selectedAspect
                         )
                         onGenerate(request)
@@ -124,33 +140,38 @@ enum Aspect: String, CaseIterable, Identifiable {
 
 private struct OutfitItem {
     let image: String
-    let title: String
+    let displayTitle: String
+    let promptValue: String
+    
+    var selection: SelectionOption {
+        SelectionOption(displayTitle: displayTitle, promptValue: promptValue)
+    }
 }
 
 struct GenerationRequest: Hashable {
     let keywords: [String]
-    let gender: String
-    let mood: String
+    let gender: SelectionOption
+    let mood: SelectionOption
     let accentStrength: Double
-    let outfit: String
+    let outfit: SelectionOption
     let aspect: Aspect
     
     func composedPrompt() -> String {
         let fusedCharacters = fusedKeywordPhrase()
         let accentDescriptor = accentIntensityDescriptor()
-        let moodDescriptor = mood.lowercased()
+        let moodDescriptor = mood.promptValue.lowercased()
 
         return """
-        Create a surreal and chaotic 'brain rot' hybrid creature design that is a literal fusion of \(fusedCharacters). 
-        Do NOT make it look like a normal person — it should be a creature or hybrid lifeform where the anatomy and features of each element are physically merged together. 
-        For example, parts of the body, texture, and shape should clearly show details from both \(fusedCharacters). 
+        Create a surreal and chaotic 'brain rot' hybrid creature design that is a literal fusion of \(fusedCharacters).
+        Do NOT make it look like a normal person — it should be a creature or hybrid lifeform where the anatomy and features of each element are physically merged together.
+        For example, parts of the body, texture, and shape should clearly show details from both \(fusedCharacters).
         
-        Gender style: \(gender). Mood: \(mood). Accent strength: \(accentDescriptor). Outfit style: \(outfit). 
-        The overall vibe is absurdist and over-saturated, combining animal, object, and human chaos in one. 
+        Gender style: \(gender.promptValue). Mood: \(mood.promptValue). Accent strength: \(accentDescriptor). Outfit style: \(outfit.promptValue).
+        The overall vibe is absurdist and over-saturated, combining animal, object, and human chaos in one.
         Ultra-detailed, hyper-colorful, cinematic lighting, stylized 4K render, in the art style of 'brain rot meme universe'.
         Setting: a hyper-digital \(moodDescriptor) environment loaded with neon signage, floating emojis, stickers, graffiti text, and glitch effects.
         Aspect ratio: \(aspect.rawValue)
-                The fusion should feel bizarre, vibrant, meme-like, and overloaded with digital brainrot energy — glowing emojis, chaotic lighting, colorful cyber aesthetics, viral meme stickers, digital screens and emojis floating around. 
+                The fusion should feel bizarre, vibrant, meme-like, and overloaded with digital brainrot energy — glowing emojis, chaotic lighting, colorful cyber aesthetics, viral meme stickers, digital screens and emojis floating around.
 
         
         """
@@ -159,11 +180,11 @@ struct GenerationRequest: Hashable {
     
     var displayTitle: String {
         let joined = keywords.joined(separator: ", ").capitalized
-        return joined.isEmpty ? "Custom Brainrot Character" : joined
+        return joined.isEmpty ? L10n.GenerateDetails.defaultTitle : joined
     }
     
     var summary: String {
-        "\(mood) • \(outfit) • \(aspect.rawValue)"
+        L10n.GenerateDetails.summary(mood: mood.displayTitle, outfit: outfit.displayTitle, aspect: aspect.rawValue)
     }
     
     var negativePrompt: String {
@@ -180,7 +201,7 @@ struct GenerationRequest: Hashable {
             .filter { !$0.isEmpty }
         
         guard !cleaned.isEmpty else {
-            return "an imaginative persona"
+            return L10n.GenerateDetails.defaultCharacter
         }
         
         if cleaned.count == 1 {
@@ -288,28 +309,28 @@ private struct SelectPill: View {
 
 // 2x2 pills section
 private struct Pill2x2Section: View {
-    let titles: [String]
+    let options: [SelectionOption]
     @Binding var selectedIndex: Int
     let selectionColor: SwiftUI.Color
 
     var body: some View {
         SwiftUI.VStack(spacing: 12) {
             SwiftUI.HStack(spacing: 12) {
-                ForEach(0..<min(2, titles.count), id: \.self) { i in
+                ForEach(0..<min(2, options.count), id: \.self) { i in
                     SwiftUI.Button {
                         selectedIndex = i
                     } label: {
-                        SelectPill(title: titles[i], isSelected: selectedIndex == i, selectionColor: selectionColor)
+                        SelectPill(title: options[i].displayTitle, isSelected: selectedIndex == i, selectionColor: selectionColor)
                     }
                     .buttonStyle(.plain)
                 }
             }
             SwiftUI.HStack(spacing: 12) {
-                ForEach(2..<min(4, titles.count), id: \.self) { i in
+                ForEach(2..<min(4, options.count), id: \.self) { i in
                     SwiftUI.Button {
                         selectedIndex = i
                     } label: {
-                        SelectPill(title: titles[i], isSelected: selectedIndex == i, selectionColor: selectionColor)
+                        SelectPill(title: options[i].displayTitle, isSelected: selectedIndex == i, selectionColor: selectionColor)
                     }
                     .buttonStyle(.plain)
                 }
@@ -346,9 +367,9 @@ private struct AccentSlider: View {
                 .tint(SwiftUI.Color.blue)
                 .padding(.horizontal, 16)
             SwiftUI.HStack {
-                SwiftUI.Text("Mild")
+                SwiftUI.Text(L10n.GenerateDetails.sliderLow)
                 SwiftUI.Spacer()
-                SwiftUI.Text("Over-The Top")
+                SwiftUI.Text(L10n.GenerateDetails.sliderHigh)
             }
             .font(AppFont.nippoMedium(13))
             .foregroundColor(SwiftUI.Color.black.opacity(0.65))
@@ -386,7 +407,7 @@ private struct OutfitRow: View {
                                         .stroke(SwiftUI.Color.black, lineWidth: 3)
                                 )
 
-                            SwiftUI.Text(items[i].title)
+                            SwiftUI.Text(items[i].displayTitle)
                                 .font(AppFont.nippoMedium(13))
                                 .fontWeight(.semibold)
                                 .foregroundColor(selected ? .white : .black)
@@ -496,6 +517,7 @@ struct GenerateDetailsView_Previews: PreviewProvider {
     static var previews: some View {
         GenerateDetailsView(keywords: ["Preview"], onGenerate: { _ in })
             .previewDisplayName("Generate Details")
+            .environmentObject(LocalizationManager.shared)
     }
 }
 

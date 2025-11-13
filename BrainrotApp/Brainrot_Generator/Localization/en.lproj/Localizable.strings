@@ -1,0 +1,110 @@
+/* Localizable.strings (English) */
+
+"app_name" = "Brainrot Generator";
+
+"common.ok" = "OK";
+"common.share" = "Share";
+"common.delete" = "Delete";
+"common.favorite" = "Favorite";
+"common.favorited" = "Favorited";
+"common.generate" = "Generate";
+"common.generate_again" = "Generate Again";
+"common.language" = "Language";
+"common.done" = "Done";
+"common.restore" = "Restore";
+"common.terms_of_use" = "Terms of Use";
+"common.privacy_policy" = "Privacy Policy";
+"common.get_premium" = "Get Premium";
+"common.home" = "Home";
+"common.setting" = "Setting";
+
+"splash.title" = "ITALIAN\nBRAINROT";
+
+"intro.next" = "Next";
+"intro1.title" = "Enter the World of\nItalian Brainrot!";
+"intro2.title" = "Create your own rot!";
+"intro3.title" = "Share,Break, Go Viral!";
+"intro3.get_started" = "Get Started";
+
+"home.header_title" = "Who will you\nbe today?";
+"home.placeholder" = "Enter your character name here";
+"home.last_generated" = "Last Generated";
+"home.last_generated_empty" = "Generate your first character to see it here.";
+"home.favorites" = "Favorites";
+"home.favorites_empty" = "Tap the heart on a creation to add it to favorites.";
+"home.alert.missing_keywords" = "Please enter a character name";
+"home.alert.generation_failed" = "Generation failed";
+"home.tab.home" = "Home";
+"home.tab.settings" = "Setting";
+"home.quota_label" = "Images";
+"home.quota_loading" = "Loading...";
+
+"generate.header_title" = "Customize\nYour Chaos";
+"generate.section.gender" = "Gender / Vibe";
+"generate.section.mood" = "Mood Selector";
+"generate.section.accent" = "Accent Strength";
+"generate.section.outfit" = "Outfit Style";
+"generate.section.aspect" = "Aspect Ratio";
+"generate.gender.male" = "Male";
+"generate.gender.female" = "Female";
+"generate.gender.mixed" = "Mixed";
+"generate.gender.chaos" = "Chaos";
+"generate.mood.romantic" = "Romantic";
+"generate.mood.mafia" = "Mafia Drama";
+"generate.mood.cafe" = "Cafe Gossip";
+"generate.mood.tiktok" = "Tiktok-Rot";
+"generate.outfit.vintage" = "Vintage";
+"generate.outfit.modern" = "Modern";
+"generate.outfit.meme" = "Meme-Core";
+"generate.slider.low" = "Mild";
+"generate.slider.high" = "Over-The Top";
+"generate.default_title" = "Custom Brainrot Character";
+"generate.default_character" = "an imaginative persona";
+"generate.summary_format" = "%1$@ • %2$@ • %3$@";
+
+"generating.status" = "Generating...";
+
+"result.title" = "Ai Brainrot";
+
+"gallery.title" = "Gallery";
+"gallery.empty_title" = "Your creations will appear here";
+"gallery.empty_subtitle" = "Generate an image to see it in your gallery.";
+
+"settings.title" = "Setting";
+"settings.language" = "Language";
+"settings.terms_of_service" = "Terms Of Service";
+"settings.community_guidelines" = "Community Guidelines";
+"settings.creations" = "Creations";
+
+"language.title" = "Language";
+"language.done" = "Done";
+"language.name.english" = "English";
+"language.name.korean" = "Korean";
+"language.name.italian" = "Italian";
+"language.name.japanese" = "Japanese";
+
+"paywall.hero_title" = "Unlock Brainrot\nPremium";
+"paywall.benefit.faster_results" = "Faster Results";
+"paywall.benefit.unlock_premium" = "Unlock premium features";
+"paywall.benefit.unlimited_memes" = "Unlimited Meme Generations";
+"paywall.benefit.nonstop_chaos" = "Non-Stop Chaos At Your Fingertips";
+"paywall.free_trial" = "Not sure yet? Enable free trial";
+"paywall.plan.weekly" = "1 Week, $9.99";
+"paywall.plan.monthly" = "1 Month, $19.99";
+"paywall.plan.monthly_subtitle" = "Only $4.50 / week";
+"paywall.plan.badge" = "Best value";
+"paywall.subscribe" = "Subscribe";
+"paywall.legal" = "By continuing, you agree to Privacy Policy\nand Terms & Condition";
+"paywall.restore" = "Restore";
+"paywall.terms" = "Terms of Use";
+"paywall.privacy" = "Privacy Policy";
+
+"service_error.unexpected_response" = "The image service returned an unexpected response.";
+"service_error.status_with_message" = "Image service error (%1$@): %2$@";
+"service_error.missing_url" = "No image URL was provided by the service.";
+"service_error.invalid_image_data" = "The image data returned by the service was invalid.";
+"service_error.download_failed" = "Unable to download the generated image.";
+"service_error.unknown_error" = "Unknown error";
+"service_error.no_response" = "No response body";
+
+

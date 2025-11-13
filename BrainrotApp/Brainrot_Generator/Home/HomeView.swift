@@ -3,6 +3,8 @@ import FirebaseAuth
 
 // MARK: - Home Screen (Root)
 struct HomeView: View {
+    @EnvironmentObject private var usageManager: UsageManager
+    @EnvironmentObject private var localizationManager: LocalizationManager
     @StateObject private var contentStore = GeneratedContentStore()
     @State private var promptText: String = ""
     @State private var selectedKeywords: [String] = []
@@ -28,12 +30,20 @@ struct HomeView: View {
                     NavigationStack(path: $navigationPath) {
                         HomeContentView(
                             contentStore: contentStore,
+                            usageManager: usageManager,
                             promptText: $promptText,
                             selectedKeywords: $selectedKeywords,
                             detailImage: $detailImage,
-                            onGenerate: { navigationPath.append(.generateDetails) },
+                            onGenerate: {
+                                if usageManager.canGenerate {
+                                    navigationPath.append(.generateDetails)
+                                } else {
+                                    showPaywall = true
+                                }
+                            },
                             onRequireKeywords: { showKeywordAlert = true },
-                            onTapPro: { showPaywall = true }
+                            onTapPro: { showPaywall = true },
+                            onRequireSubscription: { showPaywall = true }
                         )
                         .navigationDestination(for: HomeRoute.self) { route in
                             switch route {
@@ -43,8 +53,10 @@ struct HomeView: View {
                                     onGenerate: startGeneration
                                 )
                                 .environmentObject(contentStore)
+                                .environmentObject(usageManager)
                             case .generateProgress:
                                 GeneratingView()
+                                    .environmentObject(usageManager)
                             case .generatedResult(let image):
                                 GeneratedResultView(
                                     image: image,
@@ -52,11 +64,16 @@ struct HomeView: View {
                                         navigationPath.removeAll()
                                     },
                                     onGenerateAgain: {
-                                        navigationPath.removeAll()
-                                        navigationPath.append(.generateDetails)
+                                        if usageManager.canGenerate {
+                                            navigationPath.removeAll()
+                                            navigationPath.append(.generateDetails)
+                                        } else {
+                                            showPaywall = true
+                                        }
                                     }
                                 )
                                 .environmentObject(contentStore)
+                                .environmentObject(usageManager)
                             }
                         }
                         .sheet(item: $detailImage) { image in
@@ -69,6 +86,7 @@ struct HomeView: View {
                                 }
                             )
                             .environmentObject(contentStore)
+                            .environmentObject(usageManager)
                         }
                         .sheet(isPresented: $showPaywall) {
                             PaywallView()
@@ -79,6 +97,7 @@ struct HomeView: View {
                     SettingsView()
                         .padding(.top, 10)
                         .environmentObject(contentStore)
+                        .environmentObject(usageManager)
                 }
                 
                 // CUSTOM TAB BAR
@@ -94,11 +113,11 @@ struct HomeView: View {
         .task {
             await ensureAnonymousSignIn()
         }
-        .alert("Please enter a character name", isPresented: $showKeywordAlert) {
-            Button("OK", role: .cancel) {}
+        .alert(L10n.Home.alertMissingKeywords, isPresented: $showKeywordAlert) {
+            Button(L10n.Common.ok, role: .cancel) {}
         }
-        .alert("Generation failed", isPresented: $showGenerationError, presenting: generationErrorMessage) { _ in
-            Button("OK", role: .cancel) {}
+        .alert(L10n.Home.alertGenerationFailed, isPresented: $showGenerationError, presenting: generationErrorMessage) { _ in
+            Button(L10n.Common.ok, role: .cancel) {}
         } message: { message in
             Text(message)
         }
@@ -107,6 +126,10 @@ struct HomeView: View {
 
 private extension HomeView {
     func startGeneration(with request: GenerationRequest) {
+        guard usageManager.canGenerate else {
+            showPaywall = true
+            return
+        }
         navigationPath.append(.generateProgress)
         
         Task {
@@ -123,6 +146,17 @@ private extension HomeView {
                             title: request.displayTitle,
                             subtitle: request.summary
                         )
+                        
+                        Task {
+                            do {
+                                try await usageManager.consumeCreditIfAvailable()
+                            } catch {
+                                await MainActor.run {
+                                    generationErrorMessage = error.localizedDescription
+                                    showGenerationError = true
+                                }
+                            }
+                        }
                         
                         if navigationPath.last == .generateProgress {
                             navigationPath.removeLast()
@@ -154,23 +188,32 @@ private extension HomeView {
 // MARK: - Home Content Wrapper
 private struct HomeContentView: View {
     @ObservedObject var contentStore: GeneratedContentStore
+    @ObservedObject var usageManager: UsageManager
     @Binding var promptText: String
     @Binding var selectedKeywords: [String]
     @Binding var detailImage: GeneratedImage?
     let onGenerate: () -> Void
     let onRequireKeywords: () -> Void
     let onTapPro: () -> Void
+    let onRequireSubscription: () -> Void
     
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 16) {
-                HeaderView(onTapPro: onTapPro)
+                HeaderView(
+                    used: usageManager.quota.used,
+                    total: usageManager.quota.total,
+                    isLoading: usageManager.isLoading,
+                    onTapPro: onTapPro
+                )
                 
                 InputBoxView(text: $promptText, keywords: $selectedKeywords)
                 
-                GenerateButtonView(title: "Generate") {
+                GenerateButtonView(title: L10n.Common.generate, isDisabled: usageManager.isLoading) {
                     if selectedKeywords.isEmpty {
                         onRequireKeywords()
+                    } else if !usageManager.canGenerate {
+                        onRequireSubscription()
                     } else {
                         onGenerate()
                     }
@@ -178,7 +221,7 @@ private struct HomeContentView: View {
                 .padding(.top, 2)
                 
                 // Last Generated
-                Text("Last Generated")
+                Text(L10n.Home.lastGenerated)
                     .font(AppFont.nippoMedium(16))
                     .fontWeight(.bold)
                     .foregroundColor(.black)
@@ -191,21 +234,21 @@ private struct HomeContentView: View {
                     )
                     .padding(.bottom, 4)
                 } else {
-                    Text("Generate your first character to see it here.")
+                    Text(L10n.Home.lastGeneratedEmpty)
                         .font(AppFont.nippoMedium(14))
                         .foregroundColor(.black.opacity(0.6))
                         .padding(.bottom, 4)
                 }
                 
                 // Favorites
-                Text("Favorites")
+                Text(L10n.Home.favorites)
                     .font(AppFont.nippoMedium(16))
                     .fontWeight(.bold)
                     .foregroundColor(.black)
                     .padding(.top, 4)
                 
                 if contentStore.favorites.isEmpty {
-                    Text("Tap the heart on a creation to add it to favorites.")
+                    Text(L10n.Home.favoritesEmpty)
                         .font(AppFont.nippoMedium(14))
                         .foregroundColor(.black.opacity(0.6))
                         .padding(.bottom, 72)
@@ -227,16 +270,23 @@ private struct HomeContentView: View {
 
 // MARK: - Header
 private struct HeaderView: View {
+    let used: Int
+    let total: Int
+    let isLoading: Bool
     let onTapPro: () -> Void
     var body: some View {
-        HStack(alignment: .top) {
-            Text("Who will you\nbe today?")
+        HStack(alignment: .top, spacing: 12) {
+            Text(L10n.Home.headerTitle)
                 .font(AppFont.nippoMedium(32))
                 .fontWeight(.black)
                 .foregroundColor(.black)
                 .multilineTextAlignment(.leading)
                 .lineSpacing(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Spacer(minLength: 12)
+            
+            UsageCapsuleView(used: used, total: total, isLoading: isLoading)
             
             Button(action: onTapPro) {
                 Image("pro_badge")
@@ -245,6 +295,54 @@ private struct HeaderView: View {
                     .frame(width: 40, height: 40)
             }
         }
+    }
+}
+
+private struct UsageCapsuleView: View {
+    let used: Int
+    let total: Int
+    let isLoading: Bool
+    
+    private let gradient = LinearGradient(
+        colors: [Color(hex: "#D7263D"), Color(hex: "#F2C94C")],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+    
+    var body: some View {
+        let safeTotal = max(total, 1)
+        let displayText = isLoading
+            ? L10n.Home.quotaLoading
+            : "\(min(used, safeTotal))/\(safeTotal) \(L10n.Home.quotaLabel)"
+        
+        HStack(spacing: 6) {
+            ZStack {
+                Image(systemName: "hand.raised.fill")
+                    .font(AppFont.nippoMedium(13))
+                    .foregroundColor(.white.opacity(0.9))
+                Image(systemName: "crown.fill")
+                    .font(AppFont.nippoMedium(10))
+                    .offset(y: -9)
+                    .foregroundColor(.white)
+            }
+            .frame(width: 24, height: 24)
+            
+            Text(displayText)
+                .font(AppFont.nippoMedium(13))
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(gradient)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(Color.black.opacity(0.8), lineWidth: 2)
+                )
+        )
+        .shadow(color: Color.black.opacity(0.25), radius: 6, x: 0, y: 4)
     }
 }
 
@@ -319,7 +417,7 @@ private struct InputBoxView: View {
                 }
                 
                 TextField(
-                    keywords.isEmpty && currentInput.isEmpty ? "Enter your character name here" : "",
+                    keywords.isEmpty && currentInput.isEmpty ? L10n.Home.placeholder : "",
                     text: $currentInput,
                     onCommit: commitCurrentInput
                 )
@@ -400,6 +498,7 @@ private struct InputBoxView: View {
 // MARK: - Generate Button ✅ FINAL SHADOW FIX
 private struct GenerateButtonView: View {
     let title: String
+    var isDisabled: Bool = false
     let action: () -> Void
     
     var body: some View {
@@ -432,6 +531,8 @@ private struct GenerateButtonView: View {
             .frame(height: 56)
         }
         .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.6 : 1.0)
     }
 }
 
@@ -546,8 +647,12 @@ private struct FavoriteItemView: View {
                     Text(subtitle)
                         .font(AppFont.nippoMedium(13))
                         .foregroundColor(.black.opacity(0.75))
+                        .lineLimit(1)
                 }
+                
+                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(10)
             .background(
                 RoundedRectangle(cornerRadius: 20)
@@ -578,9 +683,14 @@ private extension HomeView {
     func ensureAnonymousSignIn() async {
         guard !hasAuthenticated else { return }
         do {
-            if Auth.auth().currentUser == nil {
-                _ = try await Auth.auth().signInAnonymously()
+            let user: FirebaseAuth.User
+            if let existing = Auth.auth().currentUser {
+                user = existing
+            } else {
+                let result = try await Auth.auth().signInAnonymously()
+                user = result.user
             }
+            await usageManager.configure(for: user.uid)
             hasAuthenticated = true
         } catch {
             print("⚠️ Failed to sign in anonymously: \(error.localizedDescription)")
@@ -609,7 +719,7 @@ private struct CustomTabBarView: View {
             HStack {
                 TabButton(
                     icon: "icon_home",
-                    title: "Home",
+                    title: L10n.Home.tabHome,
                     isSelected: selected == .home
                 ) { selected = .home }
                 
@@ -617,7 +727,7 @@ private struct CustomTabBarView: View {
                 
                 TabButton(
                     icon: "icon_settings",
-                    title: "Setting",
+                    title: L10n.Home.tabSettings,
                     isSelected: selected == .settings
                 ) { selected = .settings }
             }
