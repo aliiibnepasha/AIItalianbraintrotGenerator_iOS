@@ -50,20 +50,7 @@ struct Intro3View: View {
                 }
                 
                 // ✅ Title with thick cartoon shadow
-                ZStack {
-                    Text(L10n.Intro.Three.title)
-                            .font(AppFont.nippoMedium(28))
-                            .fontWeight(.black)
-                        .foregroundColor(.black)
-                        .multilineTextAlignment(.center)
-                        .offset(x: 3, y: 4)
-                    
-                    Text(L10n.Intro.Three.title)
-                            .font(AppFont.nippoMedium(28))
-                            .fontWeight(.black)
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                }
+                IntroTitleText(text: L10n.Intro.Three.title, fontSize: 30)
                 .padding(.top, 12)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 19)

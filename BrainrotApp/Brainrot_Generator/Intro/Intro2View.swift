@@ -52,22 +52,7 @@ struct Intro2View: View {
                 }
 
                 // ✅ Title with same heavy shadow as Intro1
-                ZStack {
-                    // Shadow layer (black)
-                    Text(L10n.Intro.Two.title)
-                        .font(AppFont.nippoMedium(28))
-                        .fontWeight(.black)
-                        .foregroundColor(.black)
-                        .multilineTextAlignment(.center)
-                        .offset(x: 3, y: 4) // bold shadow
-                    
-                    // Main white text
-                    Text(L10n.Intro.Two.title)
-                        .font(AppFont.nippoMedium(28))
-                        .fontWeight(.black)
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                }
+                IntroTitleText(text: L10n.Intro.Two.title, fontSize: 30)
                 .padding(.top, 12)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 19)

@@ -164,7 +164,7 @@ private struct PremiumBanner: View {
                         }
                         
                         Text(L10n.Common.getPremium)
-                            .font(AppFont.nippoMedium(20))
+                            .font(AppFont.nippoMedium(23))
                             .fontWeight(.black)
                             .foregroundColor(.white)
                             .shadow(color: .black.opacity(0.45), radius: 0, x: 0, y: 3)

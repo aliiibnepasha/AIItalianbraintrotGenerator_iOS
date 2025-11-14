@@ -45,23 +45,7 @@ struct Intro1View: View {
                                   .delay(0.3), value: animateSticker)
                 }
 
-                // ✅ Title with thick dark shadow
-                ZStack(alignment: .center) {
-                    // Shadow base layer (black)
-                    Text(L10n.Intro.One.title)
-                        .font(AppFont.nippoMedium(28))
-                        .fontWeight(.black)
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.black)
-                        .offset(x: 3, y: 4)  // heavier bottom shadow
-                    
-                    // Main white text
-                    Text(L10n.Intro.One.title)
-                        .font(AppFont.nippoMedium(28))
-                        .fontWeight(.black)
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.white)
-                }
+                IntroTitleText(text: L10n.Intro.One.title, fontSize: 30)
                 .padding(.top, 12)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 19)

@@ -61,7 +61,7 @@ struct LanguageSelectionView: View {
                 selectedLanguageCode = pendingSelection
                 dismiss()
             }
-            .font(AppFont.nippoMedium(16))
+            .font(AppFont.nippoMedium(18))
             .fontWeight(.bold)
             .foregroundColor(.black)
         }
@@ -110,10 +110,10 @@ private struct LanguageRow: View {
             Spacer()
             
             if isSelected {
-                Image(systemName: "checkmark")
-                    .font(AppFont.nippoMedium(18))
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
+                Image("checkmark_icon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 20, height: 20)
             }
         }
         .padding(.horizontal, 22)
@@ -131,18 +131,18 @@ private struct BackButton: View {
                     .frame(width: 40, height: 40)
                     .offset(y: 5)
                 
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 12)
                     .fill(Color.white)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10)
+                        RoundedRectangle(cornerRadius: 12)
                             .stroke(Color.black, lineWidth: 4)
                     )
                     .frame(width: 40, height: 40)
                     .overlay(
-                        Image(systemName: "chevron.left")
-                    .font(AppFont.nippoMedium(16))
-                    .fontWeight(.bold)
-                            .foregroundColor(.black)
+                        Image("back_arrow_icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
                     )
             }
         }

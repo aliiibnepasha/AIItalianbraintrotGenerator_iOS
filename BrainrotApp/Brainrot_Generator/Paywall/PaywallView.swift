@@ -8,7 +8,6 @@ struct PaywallView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
     // MARK: - State
-    @State private var enableFreeTrial: Bool = false
     @State private var selectedPlan: SubscriptionPlan = .monthly
     @State private var isPurchasing: Bool = false
     @State private var purchaseErrorMessage: String?
@@ -18,24 +17,22 @@ struct PaywallView: View {
     private let backgroundColor = Color(hex: "#E5F974")
     private let characterImageName = "paywall_hero"
     @State private var animateHero: Bool = false
+    @State private var titleScale: CGFloat = 0.85
+    @State private var titleBounce: CGFloat = 0
+    @State private var titleFade: Double = 0
     
     var body: some View {
         ZStack {
             backgroundColor.ignoresSafeArea()
             
-            ScrollView(.vertical, showsIndicators: false) {
+            
                 VStack(spacing: 24) {
                     ZStack(alignment: .bottom) {
                         heroSection
                             .frame(maxWidth: .infinity)
                             .padding(.top, 8)
                         
-                        Text(L10n.Paywall.heroTitle)
-                            .font(AppFont.nippoMedium(36))
-                            .fontWeight(.black)
-                            .foregroundColor(.black)
-                            .multilineTextAlignment(.center)
-                            .shadow(color: .black.opacity(0.08), radius: 2, x: 0, y: 4)
+                        paywallTitle
                             .padding(.bottom, 80)
                     }
                     .padding(.bottom, -30)
@@ -43,18 +40,44 @@ struct PaywallView: View {
                     benefitsList
                         .padding(.top, -70)
                     
-                    trialToggle
-                    
                     planOptions
                     
                     subscribeButton
+                        .padding(.top, -8)
                     
                     legalFooter
+                        .padding(.top, -12)
                     
                     footnotes
+                        .padding(.top, -8)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 28)
+            
+            
+            // Close Button - Top Left
+            VStack {
+                HStack {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(AppFont.nippoMedium(18))
+                            .fontWeight(.bold)
+                            .foregroundColor(.black)
+                            .frame(width: 35, height: 35)
+                            .background(
+                                Circle()
+                                    .fill(Color.white.opacity(0.9))
+                                    .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+                            )
+                    }
+                    .padding(.leading, 20)
+                    .padding(.top, 10)
+                    
+                    Spacer()
+                }
+                Spacer()
             }
         }
         .onAppear {
@@ -75,84 +98,118 @@ struct PaywallView: View {
         Image(characterImageName)
             .resizable()
             .scaledToFit()
-            .frame(height: 430)
+            .frame(height: 350)
             .scaleEffect(animateHero ? 1.0 : 0.0)
             .opacity(animateHero ? 1.0 : 0.0)
             .animation(.spring(response: 0.6, dampingFraction: 0.55).delay(0.05), value: animateHero)
+    }
+    
+    // MARK: - Paywall Title
+    
+    private var paywallTitle: some View {
+        let text = L10n.Paywall.heroTitle
+        let fontSize: CGFloat = 36
+        
+        let outlineOffsets: [CGPoint] = [
+            CGPoint(x: -3, y: -3),
+            CGPoint(x: 3, y: -3),
+            CGPoint(x: -3, y: 3),
+            CGPoint(x: 3, y: 3),
+            CGPoint(x: 0, y: -3),
+            CGPoint(x: 0, y: 3),
+            CGPoint(x: -4, y: 0),
+            CGPoint(x: 4, y: 0),
+            CGPoint(x: 0, y: 4),
+            CGPoint(x: 0, y: 5),
+            CGPoint(x: 0, y: 6)
+        ]
+        
+        return ZStack {
+            // Black outline layers
+            ForEach(outlineOffsets, id: \.self) { offset in
+                Text(text)
+                    .font(AppFont.nippoMedium(fontSize))
+                    .fontWeight(.black)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.black)
+                    .offset(x: offset.x, y: offset.y)
+                    .opacity(titleFade)
+                    .scaleEffect(titleScale)
+            }
+            
+            // White main text
+            Text(text)
+                .font(AppFont.nippoMedium(fontSize))
+                .fontWeight(.black)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.white)
+                .opacity(titleFade)
+                .scaleEffect(titleScale + titleBounce)
+        }
+        .onAppear {
+            withAnimation {
+                titleFade = 1
+            }
+            withAnimation(.spring(response: 0.65, dampingFraction: 0.6).delay(0.15)) {
+                titleScale = 1
+                titleBounce = 0.05
+            }
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.6).delay(0.45)) {
+                titleBounce = 0
+            }
+        }
     }
     
     // MARK: - Benefits
     
     private var benefitsList: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ForEach(PlanBenefit.allCases, id: \.self) { benefit in
-                HStack(alignment: .center, spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.black)
-                            .frame(width: 22, height: 22)
-                        
-                        Image(systemName: "checkmark")
-                            .font(AppFont.nippoMedium(14))
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                    }
-                    
-                    Text(benefit.title)
-                        .font(AppFont.nippoMedium(16))
-                        .fontWeight(.semibold)
-                        .foregroundColor(.black)
-                }
+            ForEach(Array(PlanBenefit.allCases.enumerated()), id: \.element) { index, benefit in
+                BenefitRowView(
+                    benefit: benefit,
+                    delay: Double(index) * 0.08
+                )
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, 20)
     }
     
-    // MARK: - Free Trial Toggle
-    
-    private var trialToggle: some View {
-        HStack(spacing: 16) {
-            Text(L10n.Paywall.freeTrial)
-                .font(AppFont.nippoMedium(18))
-                .fontWeight(.semibold)
-                .foregroundColor(.black)
-            
-            Spacer()
-            
-            Button(action: { enableFreeTrial.toggle() }) {
-                ZStack(alignment: enableFreeTrial ? .trailing : .leading) {
-                    Capsule()
-                        .fill(enableFreeTrial ? Color(hex: "#D7263D") : Color(hex: "#B0B0B0"))
-                        .overlay(
-                            Capsule()
-                                .stroke(Color.black, lineWidth: 3)
-                        )
-                        .frame(width: 78, height: 36)
-                    
+    private struct BenefitRowView: View {
+        let benefit: PlanBenefit
+        let delay: Double
+        @State private var isVisible: Bool = false
+        
+        var body: some View {
+            HStack(alignment: .center, spacing: 12) {
+                ZStack {
                     Circle()
-                        .fill(Color.white)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.black, lineWidth: 3)
-                        )
-                        .frame(width: 32, height: 32)
-                        .padding(2)
+                        .fill(Color.black)
+                        .frame(width: 22, height: 22)
+                        .scaleEffect(isVisible ? 1.0 : 0.0)
+                        .opacity(isVisible ? 1.0 : 0.0)
+                    
+                    Image(systemName: "checkmark")
+                        .font(AppFont.nippoMedium(14))
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .scaleEffect(isVisible ? 1.0 : 0.0)
+                        .opacity(isVisible ? 1.0 : 0.0)
                 }
-                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: enableFreeTrial)
+                
+                Text(benefit.title)
+                    .font(AppFont.nippoMedium(16))
+                    .fontWeight(.semibold)
+                    .foregroundColor(.black)
+                    .offset(x: isVisible ? 0 : -20)
+                    .opacity(isVisible ? 1.0 : 0.0)
             }
-            .buttonStyle(.plain)
+            .onAppear {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(delay)) {
+                    isVisible = true
+                }
+            }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 18)
-        .background(
-            RoundedRectangle(cornerRadius: 28)
-                .fill(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 28)
-                        .stroke(Color.black, lineWidth: 4)
-                )
-                .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 6)
-        )
     }
     
     // MARK: - Plan Options

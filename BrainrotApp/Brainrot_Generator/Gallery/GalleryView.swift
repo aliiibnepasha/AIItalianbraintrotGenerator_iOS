@@ -7,35 +7,51 @@ struct GalleryView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var contentStore: GeneratedContentStore
     @State private var detailImage: GeneratedImage?
+    @State private var selectedFilter: GalleryFilter = .all
     
     private let columns: [GridItem] = [
         GridItem(.flexible(), spacing: 18),
         GridItem(.flexible(), spacing: 18)
     ]
     
+    private var filteredGallery: [GeneratedImage] {
+        switch selectedFilter {
+        case .all:
+            return contentStore.gallery
+        case .favorites:
+            return contentStore.favorites
+        }
+    }
+    
     var body: some View {
         ZStack {
             Theme.background
                 .ignoresSafeArea()
             
-            VStack(spacing: 20) {
+            VStack(spacing: 0) {
                 header
-                    .padding(.top, 8)
+                    .padding(.top, 12)
+                    .padding(.horizontal, 16)
                 
-                if contentStore.gallery.isEmpty {
+                filterButtons
+                    .padding(.top, 16)
+                    .padding(.horizontal, 16)
+                
+                if filteredGallery.isEmpty {
+                    Spacer()
                     VStack(spacing: 12) {
-                        Text(L10n.Gallery.emptyTitle)
+                        Text(selectedFilter == .all ? L10n.Gallery.emptyTitle : "No favorites yet")
                             .font(AppFont.nippoMedium(18))
                             .foregroundColor(.black)
-                        Text(L10n.Gallery.emptySubtitle)
+                        Text(selectedFilter == .all ? L10n.Gallery.emptySubtitle : "Tap the heart on a creation to add it to favorites.")
                             .font(AppFont.nippoMedium(14))
                             .foregroundColor(.black.opacity(0.7))
                     }
-                    .padding(.top, 40)
+                    Spacer()
                 } else {
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 18) {
-                            ForEach(contentStore.gallery) { item in
+                            ForEach(filteredGallery) { item in
                                 GalleryCardView(item: item)
                                     .onTapGesture {
                                         detailImage = item
@@ -65,21 +81,37 @@ struct GalleryView: View {
     }
     
     private var header: some View {
-        HStack {
-            navigationButton(action: { dismiss() })
-            
-            Spacer()
+        ZStack {
+            HStack {
+                navigationButton(action: { dismiss() })
+                Spacer()
+            }
             
             Text(L10n.Gallery.title)
                 .font(AppFont.nippoMedium(34))
                 .fontWeight(.black)
                 .foregroundColor(.black)
+        }
+    }
+    
+    private var filterButtons: some View {
+        HStack(spacing: 10) {
+            FilterCapsuleButton(
+                title: "All",
+                isSelected: selectedFilter == .all
+            ) {
+                selectedFilter = .all
+            }
+            
+            FilterCapsuleButton(
+                title: "Favourite",
+                isSelected: selectedFilter == .favorites
+            ) {
+                selectedFilter = .favorites
+            }
             
             Spacer()
-            
-            Spacer().frame(width: 40)
         }
-        .padding(.horizontal, 16)
     }
     
     private func navigationButton(action: @escaping () -> Void) -> some View {
@@ -90,18 +122,18 @@ struct GalleryView: View {
                     .frame(width: 40, height: 40)
                     .offset(y: 5)
                 
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 12)
                     .fill(Color.white)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10)
+                        RoundedRectangle(cornerRadius: 12)
                             .stroke(Color.black, lineWidth: 4)
                     )
                     .frame(width: 40, height: 40)
                     .overlay(
-                        Image(systemName: "chevron.left")
-                            .font(AppFont.nippoMedium(16))
-                            .fontWeight(.bold)
-                            .foregroundColor(.black)
+                        Image("back_arrow_icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
                     )
             }
         }
@@ -115,6 +147,43 @@ struct GalleryView_Previews: PreviewProvider {
             .previewDevice("iPhone 14 Pro")
             .environmentObject(GeneratedContentStore())
             .environmentObject(LocalizationManager.shared)
+    }
+}
+
+private enum GalleryFilter {
+    case all
+    case favorites
+}
+
+private struct FilterCapsuleButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    private let gradient = LinearGradient(
+        colors: [Color(hex: "#D7263D"), Color(hex: "#F2C94C")],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(AppFont.nippoMedium(14))
+                .fontWeight(.semibold)
+                .foregroundColor(isSelected ? .white : .black)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(isSelected ? gradient : LinearGradient(colors: [.white], startPoint: .leading, endPoint: .trailing))
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.black, lineWidth: 3)
+                        )
+                )
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -25,84 +25,99 @@ struct HomeView: View {
             Theme.background
                 .ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                if selectedTab == .home {
-                    NavigationStack(path: $navigationPath) {
-                        HomeContentView(
-                            contentStore: contentStore,
-                            usageManager: usageManager,
-                            promptText: $promptText,
-                            selectedKeywords: $selectedKeywords,
-                            detailImage: $detailImage,
-                            onGenerate: {
-                                if usageManager.canGenerate {
-                                    navigationPath.append(.generateDetails)
-                                } else {
-                                    showPaywall = true
-                                }
-                            },
-                            onRequireKeywords: { showKeywordAlert = true },
-                            onTapPro: { showPaywall = true },
-                            onRequireSubscription: { showPaywall = true }
-                        )
-                        .navigationDestination(for: HomeRoute.self) { route in
-                            switch route {
-                            case .generateDetails:
-                                GenerateDetailsView(
-                                    keywords: selectedKeywords,
-                                    onGenerate: startGeneration
-                                )
-                                .environmentObject(contentStore)
-                                .environmentObject(usageManager)
-                            case .generateProgress:
-                                GeneratingView()
-                                    .environmentObject(usageManager)
-                            case .generatedResult(let image):
-                                GeneratedResultView(
-                                    image: image,
-                                    onClose: {
-                                        navigationPath.removeAll()
-                                    },
-                                    onGenerateAgain: {
-                                        if usageManager.canGenerate {
-                                            navigationPath.removeAll()
-                                            navigationPath.append(.generateDetails)
-                                        } else {
-                                            showPaywall = true
-                                        }
-                                    }
-                                )
-                                .environmentObject(contentStore)
-                                .environmentObject(usageManager)
+            // Main Content
+            if selectedTab == .home {
+                NavigationStack(path: $navigationPath) {
+                    HomeContentView(
+                        contentStore: contentStore,
+                        usageManager: usageManager,
+                        promptText: $promptText,
+                        selectedKeywords: $selectedKeywords,
+                        detailImage: $detailImage,
+                        onGenerate: {
+                            if usageManager.canGenerate {
+                                navigationPath.append(.generateDetails)
+                            } else {
+                                showPaywall = true
                             }
-                        }
-                        .sheet(item: $detailImage) { image in
-                            ImageDetailView(
+                        },
+                        onRequireKeywords: { showKeywordAlert = true },
+                        onTapPro: { showPaywall = true },
+                        onRequireSubscription: { showPaywall = true }
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbarBackground(.hidden, for: .navigationBar)
+                    .safeAreaInset(edge: .top, spacing: 0) {
+                        Color.clear.frame(height: 0)
+                    }
+                    .navigationDestination(for: HomeRoute.self) { route in
+                        switch route {
+                        case .generateDetails:
+                            GenerateDetailsView(
+                                keywords: selectedKeywords,
+                                onGenerate: startGeneration
+                            )
+                            .environmentObject(contentStore)
+                            .environmentObject(usageManager)
+                        case .generateProgress:
+                            GeneratingView()
+                                .environmentObject(usageManager)
+                        case .generatedResult(let image):
+                            GeneratedResultView(
                                 image: image,
-                                onClose: { detailImage = nil },
-                                onDelete: {
-                                    contentStore.delete(image)
-                                    detailImage = nil
+                                onClose: {
+                                    navigationPath.removeAll()
+                                },
+                                onGenerateAgain: {
+                                    if usageManager.canGenerate {
+                                        navigationPath.removeAll()
+                                        navigationPath.append(.generateDetails)
+                                    } else {
+                                        showPaywall = true
+                                    }
                                 }
                             )
                             .environmentObject(contentStore)
                             .environmentObject(usageManager)
                         }
-                        .sheet(isPresented: $showPaywall) {
-                            PaywallView()
-                        }
-                        .toolbar(.hidden, for: .navigationBar)
                     }
-                } else {
-                    SettingsView()
-                        .padding(.top, 10)
+                    .sheet(item: $detailImage) { image in
+                        ImageDetailView(
+                            image: image,
+                            onClose: { detailImage = nil },
+                            onDelete: {
+                                contentStore.delete(image)
+                                detailImage = nil
+                            }
+                        )
                         .environmentObject(contentStore)
                         .environmentObject(usageManager)
+                    }
+                    .fullScreenCover(isPresented: $showPaywall) {
+                        PaywallView()
+                    }
+                    .toolbar(.hidden, for: .navigationBar)
+                    .safeAreaInset(edge: .bottom, spacing: 0) {
+                        Color.clear.frame(height: 60)
+                    }
                 }
-                
-                // CUSTOM TAB BAR
+            } else {
+                SettingsView()
+                    .padding(.top, 10)
+                    .environmentObject(contentStore)
+                    .environmentObject(usageManager)
+                    .safeAreaInset(edge: .bottom, spacing: 0) {
+                        Color.clear.frame(height: 60)
+                    }
+            }
+            
+            // CUSTOM TAB BAR - Fixed at bottom, ignores keyboard
+            VStack {
+                Spacer()
                 CustomTabBarView(selected: $selectedTab)
             }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .navigationBarBackButtonHidden(true)
         .onChange(of: selectedTab) { newValue in
@@ -198,72 +213,74 @@ private struct HomeContentView: View {
     let onRequireSubscription: () -> Void
     
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
-                HeaderView(
-                    used: usageManager.quota.used,
-                    total: usageManager.quota.total,
-                    isLoading: usageManager.isLoading,
-                    onTapPro: onTapPro
+        VStack(alignment: .leading, spacing: 12) {
+            HeaderView(
+                used: usageManager.quota.used,
+                total: usageManager.quota.total,
+                isLoading: usageManager.isLoading,
+                onTapPro: onTapPro
+            )
+            .padding(.top, 0)
+            
+            InputBoxView(text: $promptText, keywords: $selectedKeywords)
+            
+            GenerateButtonView(title: L10n.Common.generate, isDisabled: usageManager.isLoading) {
+                if selectedKeywords.isEmpty {
+                    onRequireKeywords()
+                } else if !usageManager.canGenerate {
+                    onRequireSubscription()
+                } else {
+                    onGenerate()
+                }
+            }
+            .padding(.top, 2)
+            
+            // Last Generated
+            Text(L10n.Home.lastGenerated)
+                .font(AppFont.nippoMedium(16))
+                .fontWeight(.bold)
+                .foregroundColor(.black)
+                .padding(.top, 6)
+            
+            if let last = contentStore.lastGenerated {
+                LastGeneratedCardView(
+                    image: last,
+                    onTap: { detailImage = last }
                 )
-                
-                InputBoxView(text: $promptText, keywords: $selectedKeywords)
-                
-                GenerateButtonView(title: L10n.Common.generate, isDisabled: usageManager.isLoading) {
-                    if selectedKeywords.isEmpty {
-                        onRequireKeywords()
-                    } else if !usageManager.canGenerate {
-                        onRequireSubscription()
-                    } else {
-                        onGenerate()
-                    }
-                }
-                .padding(.top, 2)
-                
-                // Last Generated
-                Text(L10n.Home.lastGenerated)
-                    .font(AppFont.nippoMedium(16))
-                    .fontWeight(.bold)
-                    .foregroundColor(.black)
-                    .padding(.top, 6)
-                
-                if let last = contentStore.lastGenerated {
-                    LastGeneratedCardView(
-                        image: last,
-                        onTap: { detailImage = last }
-                    )
+                .padding(.bottom, 4)
+            } else {
+                Text(L10n.Home.lastGeneratedEmpty)
+                    .font(AppFont.nippoMedium(14))
+                    .foregroundColor(.black.opacity(0.6))
                     .padding(.bottom, 4)
-                } else {
-                    Text(L10n.Home.lastGeneratedEmpty)
-                        .font(AppFont.nippoMedium(14))
-                        .foregroundColor(.black.opacity(0.6))
-                        .padding(.bottom, 4)
-                }
-                
-                // Favorites
-                Text(L10n.Home.favorites)
-                    .font(AppFont.nippoMedium(16))
-                    .fontWeight(.bold)
-                    .foregroundColor(.black)
-                    .padding(.top, 4)
-                
-                if contentStore.favorites.isEmpty {
-                    Text(L10n.Home.favoritesEmpty)
-                        .font(AppFont.nippoMedium(14))
-                        .foregroundColor(.black.opacity(0.6))
-                        .padding(.bottom, 72)
-                } else {
+            }
+            
+            // Favorites
+            Text(L10n.Home.favorites)
+                .font(AppFont.nippoMedium(16))
+                .fontWeight(.bold)
+                .foregroundColor(.black)
+                .padding(.top, 4)
+            
+            if contentStore.favorites.isEmpty {
+                Text(L10n.Home.favoritesEmpty)
+                    .font(AppFont.nippoMedium(14))
+                    .foregroundColor(.black.opacity(0.6))
+                    .padding(.bottom, 72)
+            } else {
+                ScrollView(.vertical, showsIndicators: false) {
                     FavoritesGridView(items: contentStore.favorites) { item in
                         detailImage = item
                     }
-                    .padding(.bottom, 72)
                 }
+                .frame(maxHeight: 400)
+                .padding(.bottom, 72)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 10)
-            .onTapGesture {
-                hideKeyboard()
-            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 0)
+        .onTapGesture {
+            hideKeyboard()
         }
     }
 }
@@ -277,16 +294,21 @@ private struct HeaderView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Text(L10n.Home.headerTitle)
-                .font(AppFont.nippoMedium(32))
+                .font(AppFont.nippoMedium(28))
                 .fontWeight(.black)
                 .foregroundColor(.black)
                 .multilineTextAlignment(.leading)
                 .lineSpacing(2)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
             
-            Spacer(minLength: 12)
+            Spacer(minLength: 8)
             
-            UsageCapsuleView(used: used, total: total, isLoading: isLoading)
+            VStack(spacing: 0) {
+                Spacer()
+                    .frame(height: 4)
+                UsageCapsuleView(used: used, total: total, isLoading: isLoading)
+            }
             
             Button(action: onTapPro) {
                 Image("pro_badge")
@@ -315,25 +337,25 @@ private struct UsageCapsuleView: View {
             ? L10n.Home.quotaLoading
             : "\(min(used, safeTotal))/\(safeTotal) \(L10n.Home.quotaLabel)"
         
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             ZStack {
                 Image(systemName: "hand.raised.fill")
-                    .font(AppFont.nippoMedium(13))
+                    .font(AppFont.nippoMedium(11))
                     .foregroundColor(.white.opacity(0.9))
                 Image(systemName: "crown.fill")
-                    .font(AppFont.nippoMedium(10))
-                    .offset(y: -9)
+                    .font(AppFont.nippoMedium(8))
+                    .offset(y: -7)
                     .foregroundColor(.white)
             }
-            .frame(width: 24, height: 24)
+            .frame(width: 20, height: 20)
             
             Text(displayText)
-                .font(AppFont.nippoMedium(13))
+                .font(AppFont.nippoMedium(11))
                 .fontWeight(.semibold)
                 .foregroundColor(.white)
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 12)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 6)
         .background(
             RoundedRectangle(cornerRadius: 18)
                 .fill(gradient)
@@ -733,9 +755,12 @@ private struct CustomTabBarView: View {
             }
             .padding(.horizontal, 28)
             .frame(height: 54)
-            .background(Color.white.ignoresSafeArea(edges: .bottom))
+            .background(Color.white)
+            .padding(.bottom, 0)
         }
         .background(Color.white)
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+        .ignoresSafeArea(edges: .bottom)
     }
 }
 
@@ -751,11 +776,11 @@ private struct TabButton: View {
                 Image(icon)
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 22)
+                    .frame(height: 26)
                     .opacity(isSelected ? 1.0 : 0.55)
                 
                 Text(title)
-                    .font(AppFont.nippoMedium(11))
+                    .font(AppFont.nippoMedium(12))
                     .fontWeight(.semibold)
                     .foregroundColor(isSelected ? .black : .black.opacity(0.55))
             }
@@ -801,4 +826,5 @@ struct HomeView_Previews: PreviewProvider {
         HomeView()
     }
 }
+
 

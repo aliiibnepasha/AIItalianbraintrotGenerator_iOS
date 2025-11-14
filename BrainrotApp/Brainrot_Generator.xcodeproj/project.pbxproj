@@ -44,6 +44,7 @@
 		5DA4AFA92EC5BAE10036EFCC /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA4AFA82EC5BAE10036EFCC /* PurchaseManager.swift */; };
 		5DA4AFAC2EC5C8250036EFCC /* UsageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA4AFAB2EC5C8250036EFCC /* UsageManager.swift */; };
 		5DA4AFAE2EC5C85D0036EFCC /* SubscriptionPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA4AFAD2EC5C85D0036EFCC /* SubscriptionPlan.swift */; };
+		5DA4AFB02EC6F1CF0036EFCC /* IntroTitleText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DA4AFAF2EC6F1CF0036EFCC /* IntroTitleText.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -80,6 +81,7 @@
 		5DA4AFA82EC5BAE10036EFCC /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
 		5DA4AFAB2EC5C8250036EFCC /* UsageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageManager.swift; sourceTree = "<group>"; };
 		5DA4AFAD2EC5C85D0036EFCC /* SubscriptionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionPlan.swift; sourceTree = "<group>"; };
+		5DA4AFAF2EC6F1CF0036EFCC /* IntroTitleText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroTitleText.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -160,6 +162,7 @@
 		13B6AE022EBDC65B00A0B612 /* Intro */ = {
 			isa = PBXGroup;
 			children = (
+				5DA4AFAF2EC6F1CF0036EFCC /* IntroTitleText.swift */,
 				13B6AE032EBDC68400A0B612 /* Intro1View.swift */,
 				13B6AE052EBDCF1800A0B612 /* Intro2View.swift */,
 				13B6AE072EBDD70F00A0B612 /* Intro3View.swift */,
@@ -339,6 +342,7 @@
 				13B6AE062EBDCF1800A0B612 /* Intro2View.swift in Sources */,
 				5DA4AED82EC33F140036EFCC /* GeneratedResultView.swift in Sources */,
 				5DA4AF9E2EC47A5C0036EFCC /* ImageDetailView.swift in Sources */,
+				5DA4AFB02EC6F1CF0036EFCC /* IntroTitleText.swift in Sources */,
 				5DA4AFA22EC484890036EFCC /* GeneratedContentStore.swift in Sources */,
 				5DA4AFA42EC484890036EFCC /* ImageGenerationService.swift in Sources */,
 				5DA4AEE12EC3597C0036EFCC /* GalleryView.swift in Sources */,

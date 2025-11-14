@@ -18,6 +18,7 @@ private enum AppFlowStep {
 
 @main
 struct Brainrot_GeneratorApp: App {
+    @AppStorage("app.hasSeenIntro") private var hasSeenIntro: Bool = false
     @State private var step: AppFlowStep = .splash
     @StateObject private var localizationManager = LocalizationManager.shared
     @StateObject private var purchaseManager = PurchaseManager.shared
@@ -33,13 +34,18 @@ struct Brainrot_GeneratorApp: App {
             Group {
                 switch step {
                 case .splash:
-                    SplashView(onFinished: { step = .intro1 })
+                    SplashView(onFinished: {
+                        step = hasSeenIntro ? .main : .intro1
+                    })
                 case .intro1:
                     Intro1View(onNext: { step = .intro2 })
                 case .intro2:
                     Intro2View(onNext: { step = .intro3 })
                 case .intro3:
-                    Intro3View(onGetStarted: { step = .main })
+                    Intro3View(onGetStarted: {
+                        hasSeenIntro = true
+                        step = .main
+                    })
                 case .main:
                     HomeView()
                 }
